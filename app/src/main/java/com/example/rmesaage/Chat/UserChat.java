@@ -2,20 +2,34 @@ package com.example.rmesaage.Chat;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.View;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.R;
+import com.example.rmesaage.interfaces.MessageListener;
+import com.example.rmesaage.utils.MessageReceiver;
 import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.databaseUtils.message;
 
+import java.io.IOException;
+import java.io.ObjectOutputStream;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.stream.Collectors;
 
 public class UserChat extends AppCompatActivity {
-
+    ChatAdapter chatAdapter;
+    private MessageListener messageListener = new MessageListener() {
+        @Override
+        public void onMessageReceived(Message message) {
+            chatAdapter.insert(message);
+        }
+    };
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -25,7 +39,7 @@ public class UserChat extends AppCompatActivity {
         Intent intent = getIntent();
         String username = intent.getStringExtra("username");
         String sendTo = intent.getStringExtra("sendTo");
-
+        String sendToIP = intent.getStringExtra("sendToIP");
         ArrayList<message> userMsLst = utils.getMsList(username,sendTo);
         ArrayList<message> otherMsLst = utils.getMsList(sendTo,username);
 
@@ -43,9 +57,49 @@ public class UserChat extends AppCompatActivity {
         }
         TextView name = findViewById(R.id.ChatName);
         name.setText(sendTo);
-        ChatAdapter chatAdapter = new ChatAdapter(lst,username);
+        chatAdapter = new ChatAdapter(lst,username);
         RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
         recyclerView.setAdapter(chatAdapter);
+        Button button = findViewById(R.id.button_send);
+        button.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                EditText editText = findViewById(R.id.edit_text_message);
+                Message message = new Message(username,editText.getText().toString(),chatAdapter.getItemCount()+1);
+                chatAdapter.insert(message);
 
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            Socket socket = new Socket(sendToIP,39063);
+                            ObjectOutputStream OIS = new ObjectOutputStream(socket.getOutputStream());
+                            OIS.writeObject(message);
+                            socket.close();
+                        } catch (IOException e) {
+                            throw new RuntimeException(e);
+                        }
+                    }
+                });
+                thread.start();
+            }
+        });
+        MessageReceiver messageReceiver = new MessageReceiver();
+        messageReceiver.addMessageListener(messageListener);
+        new Thread(messageReceiver).start();
+    }
+    private int isPortAvailable(String ip) {
+        int res = 1;
+        while (true) {
+            try {
+                // создаем сокет на заданный порт
+                Socket socket = new Socket(ip, res);
+                socket.setSoTimeout(100);
+                socket.close();
+                return res;
+            } catch (IOException e) {
+                res++;
+            }
+        }
     }
 }

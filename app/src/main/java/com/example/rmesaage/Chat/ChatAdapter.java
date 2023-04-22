@@ -23,6 +23,10 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         this.currentUser = currentUser;
     }
 
+    public List<Message> getMessageList() {
+        return messageList;
+    }
+
     @NonNull
     @Override
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -69,5 +73,11 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                 }
             }
         }
+    }
+
+    public boolean insert(Message message){
+        messageList.add(message);
+        notifyDataSetChanged();
+        return true;
     }
 }

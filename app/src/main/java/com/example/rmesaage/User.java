@@ -30,6 +30,7 @@ public class User implements Serializable {
     public static User valueOf(String s){
         System.out.println(s);
         String[] str = s.split(",");
+        str[2] = str[2].split(":")[0].replace("/","");
         return new User(str[0],str[1],str[2]);
     }
 

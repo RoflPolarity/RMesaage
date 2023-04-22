@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.R;
 import com.example.rmesaage.User;
 
@@ -82,6 +83,15 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     public void bind(User user){
         chatList.clear();
         chatList.add(new ChatLstItem("", user.getUsername()));
+        notifyDataSetChanged();
+    }
+
+    public void findAndUpdate(Message message){
+        for (int i = 0; i < chatList.size(); i++) {
+            if (chatList.get(i).getName().equals(message.getMessageUser())){
+                chatList.set(i,new ChatLstItem(message.getMessageUser(),message.getMessageUser()));
+            }
+        }
         notifyDataSetChanged();
     }
 }
