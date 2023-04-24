@@ -38,6 +38,28 @@ public class server_utils {
         }
         return res.get();
     }
+
+    public static boolean updateIP(String username, String password){
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = new Socket(SERVER_IP,2511);
+                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
+                    dataOutputStream.writeUTF("UpdateIp,"+username+","+password);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return true;
+    }
     public static boolean reg(String username,String password){
 
         AtomicBoolean res = new AtomicBoolean();
@@ -46,7 +68,6 @@ public class server_utils {
             public void run() {
                 try{
                     Socket socket = new Socket(SERVER_IP,2511);
-                    System.out.println("true");
                     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
                     out.writeUTF("Register:,"+username+","+password);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());

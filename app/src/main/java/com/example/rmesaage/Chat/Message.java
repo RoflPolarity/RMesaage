@@ -12,7 +12,10 @@ public class Message implements Serializable {
         this.id = id;
 
     }
-
+    public Message(String messageUser,String text){
+        this.messageUser = messageUser;
+        this.text = text;
+    }
     public int getId() {
         return id;
     }

@@ -12,14 +12,24 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.R;
 import com.example.rmesaage.interfaces.MessageListener;
-import com.example.rmesaage.utils.MessageReceiver;
+import com.example.rmesaage.utils.MessageReceiverManager;
 import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.databaseUtils.message;
+
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.KafkaConsumer;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.Producer;
+import org.apache.kafka.clients.producer.ProducerRecord;
 
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Properties;
 import java.util.stream.Collectors;
 
 public class UserChat extends AppCompatActivity {
@@ -30,10 +40,15 @@ public class UserChat extends AppCompatActivity {
             chatAdapter.insert(message);
         }
     };
+
+    private Producer<String, String> producer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        MessageReceiverManager.getInstance().start();
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_chat);
+        MessageReceiverManager.getInstance().addMessageListener(messageListener);
         ArrayList<Message> lst = new ArrayList<>();
         databaseUtils utils = new databaseUtils(UserChat.this);
         Intent intent = getIntent();
@@ -65,41 +80,56 @@ public class UserChat extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 EditText editText = findViewById(R.id.edit_text_message);
-                Message message = new Message(username,editText.getText().toString(),chatAdapter.getItemCount()+1);
-                chatAdapter.insert(message);
-
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            Socket socket = new Socket(sendToIP,39063);
-                            ObjectOutputStream OIS = new ObjectOutputStream(socket.getOutputStream());
-                            OIS.writeObject(message);
-                            socket.close();
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
-                thread.start();
+                String message = editText.getText().toString();
+                sendMessageToKafka(message);
+                chatAdapter.insert(new Message(username,message));
+                editText.setText("");
             }
         });
-        MessageReceiver messageReceiver = new MessageReceiver();
-        messageReceiver.addMessageListener(messageListener);
-        new Thread(messageReceiver).start();
+        createKafkaProducer();
+        subscribeToKafkaTopic();
     }
-    private int isPortAvailable(String ip) {
-        int res = 1;
-        while (true) {
-            try {
-                // создаем сокет на заданный порт
-                Socket socket = new Socket(ip, res);
-                socket.setSoTimeout(100);
-                socket.close();
-                return res;
-            } catch (IOException e) {
-                res++;
+    private void createKafkaProducer() {
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "kafka-broker1:9092,kafka-broker2:9092");
+        props.put("acks", "all");
+        props.put("retries", 0);
+        props.put("batch.size", 16384);
+        props.put("linger.ms", 1);
+        props.put("buffer.memory", 33554432);
+        props.put("key.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+        props.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
+
+        producer = new KafkaProducer<String, String>(props);
+    }
+    private void sendMessageToKafka(String message) {
+        String topicName = "chat-messages";
+
+        ProducerRecord<String, String> record = new ProducerRecord<String, String>(topicName, message);
+        producer.send(record);
+    }
+
+    private void subscribeToKafkaTopic() {
+        String topicName = "chat-messages";
+        Properties props = new Properties();
+        props.put("bootstrap.servers", "kafka-broker1:9092,kafka-broker2:9092");
+        props.put("group.id", "test");
+        props.put("enable.auto.commit", "true");
+        props.put("auto.commit.interval.ms", "1000");
+        props.put("key.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        props.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
+        KafkaConsumer<String, String> consumer = new KafkaConsumer<String, String>(props);
+        consumer.subscribe(Arrays.asList(topicName));
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (true) {
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                    for (ConsumerRecord<String, String> record : records) {
+                        chatAdapter.insert(new Message(record.key(), record.value()));
+                    }
+                }
             }
-        }
+        }).start();
     }
 }

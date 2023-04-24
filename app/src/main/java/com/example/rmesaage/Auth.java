@@ -27,6 +27,8 @@ public class Auth extends AppCompatActivity {
                 if (server_utils.auth(username.getText().toString(),password.getText().toString())){
                     Intent intent = new Intent(Auth.this, Chatlst.class);
                     intent.putExtra("author",username.getText().toString());
+                    intent.putExtra("password",password.getText().toString());
+                    server_utils.updateIP(username.getText().toString(),password.getText().toString());
                     startActivity(intent);
                 }else btnAuth.setText("2");
             }
