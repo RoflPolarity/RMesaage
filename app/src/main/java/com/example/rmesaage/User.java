@@ -1,21 +1,25 @@
 package com.example.rmesaage;
 
 import java.io.Serializable;
+import java.util.Arrays;
 
 public class User implements Serializable {
     private String username;
     private String password;
     private String ip;
-    public User(String username, String password, String ip){
+    private String port;
+    public User(String username, String password, String ip,String port){
         this.username = username;
         this.password = password;
         this.ip = ip;
+        this.port = port;
     }
 
     public String toCSV(){
         return username + ","
                 + password + ","+
-                ip;
+                ip+","+
+                port;
 
 
     }
@@ -24,14 +28,19 @@ public class User implements Serializable {
     public String toString() {
         return username + ","
                 + password + ","+
-                ip;
+                ip+","+
+                port;
     }
 
     public static User valueOf(String s){
-        System.out.println(s);
         String[] str = s.split(",");
-        str[2] = str[2].split(":")[0].replace("/","");
-        return new User(str[0],str[1],str[2]);
+        String[] ip = str[2].split(":");
+        return new User(str[0],str[1],ip[0],ip[1]);
+    }
+
+    public static User valueOfCSV(String s){
+        String[] str = s.split(",");
+        return new User(str[0],str[1],str[2],str[3]);
     }
 
     public String getUsername() {
@@ -56,5 +65,13 @@ public class User implements Serializable {
 
     public void setIp(String ip) {
         this.ip = ip;
+    }
+
+    public String getPort() {
+        return port;
+    }
+
+    public void setPort(String port) {
+        this.port = port;
     }
 }

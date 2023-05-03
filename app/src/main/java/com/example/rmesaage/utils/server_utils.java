@@ -21,10 +21,11 @@ public class server_utils {
                 try{
                     Socket socket = new Socket(SERVER_IP,2511);
                     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("AUTH:,"+username+","+password);
+                    out.writeUTF("Auth,"+username+","+password);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
                     Response<?> response = (Response<?>) OIS.readObject();
                     res.set((Boolean) response.getData());
+                    socket.close();
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
                 }
@@ -39,27 +40,6 @@ public class server_utils {
         return res.get();
     }
 
-    public static boolean updateIP(String username, String password){
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                try {
-                    Socket socket = new Socket(SERVER_IP,2511);
-                    DataOutputStream dataOutputStream = new DataOutputStream(socket.getOutputStream());
-                    dataOutputStream.writeUTF("UpdateIp,"+username+","+password);
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return true;
-    }
     public static boolean reg(String username,String password){
 
         AtomicBoolean res = new AtomicBoolean();
@@ -69,13 +49,13 @@ public class server_utils {
                 try{
                     Socket socket = new Socket(SERVER_IP,2511);
                     DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("Register:,"+username+","+password);
+                    out.writeUTF("Register,"+username+","+password);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
                     Response<?> response = (Response<?>) OIS.readObject();
                     res.set((boolean) response.getData());
+                    socket.close();
                 } catch (IOException | ClassNotFoundException e) {
                     e.printStackTrace();
-                    System.out.println(false);
                 }
             }
         });
@@ -87,30 +67,4 @@ public class server_utils {
         }
         return res.get();
     }
-    //TODO do not send password
-    public static ArrayList<User> getIpTable(){
-        final Response<?>[] res = new Response[1];
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                Socket socket = null;
-                try {
-                    socket = new Socket(SERVER_IP,2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("GetIpTable");
-                    ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    res[0] = (Response) OIS.readObject();
-                } catch (IOException | ClassNotFoundException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
-        return (ArrayList<User>) res[0].getData();
-        }
-    }
+}

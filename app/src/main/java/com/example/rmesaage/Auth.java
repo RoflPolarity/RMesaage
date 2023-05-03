@@ -17,7 +17,6 @@ public class Auth extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
-
         Button btnAuth = findViewById(R.id.loginButton);
         btnAuth.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -28,12 +27,10 @@ public class Auth extends AppCompatActivity {
                     Intent intent = new Intent(Auth.this, Chatlst.class);
                     intent.putExtra("author",username.getText().toString());
                     intent.putExtra("password",password.getText().toString());
-                    server_utils.updateIP(username.getText().toString(),password.getText().toString());
                     startActivity(intent);
                 }else btnAuth.setText("2");
             }
         });
-
         Button btnRegister = findViewById(R.id.button_signup);
         btnRegister.setOnClickListener(new View.OnClickListener() {
             @Override
