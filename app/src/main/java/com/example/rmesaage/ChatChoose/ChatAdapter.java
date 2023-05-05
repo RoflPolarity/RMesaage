@@ -80,9 +80,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             ivAvatar.setImageResource(0);
         }
     }
-    public void bind(User user){
+    public void bind(String username){
         chatList.clear();
-        chatList.add(new ChatLstItem("", user.getUsername()));
+        chatList.add(new ChatLstItem("", username));
         notifyDataSetChanged();
     }
 

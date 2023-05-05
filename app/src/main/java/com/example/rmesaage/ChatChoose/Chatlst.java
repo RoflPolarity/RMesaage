@@ -45,7 +45,22 @@ public class Chatlst extends AppCompatActivity {
         chatAdapter = new ChatAdapter(utils.getChats(username));
         RecyclerView view = findViewById(R.id.recyclerview_chats);
         view.setAdapter(chatAdapter);
-        SearchView searchView = findViewById(R.id.search_view);//Поиск дописать
+        SearchView searchView = findViewById(R.id.search_view);
+        searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
+            @Override
+            public boolean onQueryTextSubmit(String query) {
+                if (server_utils.searchByUsername(query)){
+                    chatAdapter.bind(query);
+                    return true;
+                }
+                return false;
+            }
+
+            @Override
+            public boolean onQueryTextChange(String newText) {
+                return false;
+            }
+        });
         chatAdapter.setOnItemClickListener(new ChatAdapter.OnItemClickListener() {
             @Override
             public void onItemClick(int position) {

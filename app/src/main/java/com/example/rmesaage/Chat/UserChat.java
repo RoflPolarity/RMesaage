@@ -14,7 +14,7 @@ import com.example.rmesaage.R;
 import com.example.rmesaage.interfaces.MessageListener;
 import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.databaseUtils.message;
-
+import com.example.rmesaage.utils.server_utils;
 
 
 import java.io.IOException;
@@ -25,43 +25,18 @@ import java.util.stream.Collectors;
 
 public class UserChat extends AppCompatActivity {
     ChatAdapter chatAdapter;
-    private MessageListener messageListener = new MessageListener() {
-        @Override
-        public void onMessageReceived(Message message) {
-            chatAdapter.insert(message);
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_user_chat);
-        ArrayList<Message> lst = new ArrayList<>();
-        databaseUtils utils = new databaseUtils(UserChat.this);
         Intent intent = getIntent();
         String username = intent.getStringExtra("username");
         String sendTo = intent.getStringExtra("sendTo");
-        String sendToIP = intent.getStringExtra("sendToIP");
-        String sendToPort = intent.getStringExtra("sendToPort");
-        ArrayList<message> userMsLst = utils.getMsList(username,sendTo);
-        ArrayList<message> otherMsLst = utils.getMsList(sendTo,username);
-
-        for (int i = 0; i < userMsLst.size(); i++) {
-            lst.add(new Message(username,userMsLst.get(i).getText(),userMsLst.get(i).getId()));
-        }
-        for (int i = 0; i < otherMsLst.size(); i++) {
-            lst.add(new Message(sendTo,otherMsLst.get(i).getText(),otherMsLst.get(i).getId()));
-        }
-
-        lst = (ArrayList<Message>) lst.stream().sorted((x, y)->x.getId()>y.getId() ? 1:-1).collect(Collectors.toList());
-        if (lst.size()==0){
-            utils.insert(new message(1,username,sendTo,""));
-            lst.add(new Message(username,"",0));
-        }
+        ArrayList<Message> messages = server_utils.getMessage(username,sendTo);
         TextView name = findViewById(R.id.ChatName);
         name.setText(sendTo);
-        chatAdapter = new ChatAdapter(lst,username);
+        chatAdapter = new ChatAdapter(messages,username);
         RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
         recyclerView.setAdapter(chatAdapter);
         Button button = findViewById(R.id.button_send);
@@ -71,25 +46,10 @@ public class UserChat extends AppCompatActivity {
                 EditText editText = findViewById(R.id.edit_text_message);
                 Message message = new Message(username,editText.getText().toString(),chatAdapter.getItemCount()+1);
                 chatAdapter.insert(message);
-
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-
-                            Socket socket = new Socket(sendToIP,Integer.parseInt(sendToPort));
-                            ObjectOutputStream OIS = new ObjectOutputStream(socket.getOutputStream());
-                            OIS.writeObject(message);
-                            socket.close();
-                        } catch (IOException e) {
-
-                            throw new RuntimeException(e);
-                        }
-                    }
-                });
-                thread.start();
+                server_utils.sendMessage(username,sendTo,editText.getText().toString());
             }
         });
+
     }
 
 

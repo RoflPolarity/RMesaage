@@ -1,5 +1,6 @@
 package com.example.rmesaage.utils;
 
+import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Response;
 import com.example.rmesaage.User;
 
@@ -40,6 +41,33 @@ public class server_utils {
         return res.get();
     }
 
+    public static boolean sendMessage(String username,String sendTo,String text){
+        AtomicBoolean res = new AtomicBoolean();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    Socket socket = new Socket(SERVER_IP, 2511);
+                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                    out.writeUTF("SendMessage,"+username+","+sendTo+","+text);
+                    ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
+                    Response<?> response = (Response<?>) OIS.readObject();
+                    res.set((Boolean) response.getData());
+                    socket.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return res.get();
+    }
+
     public static boolean reg(String username,String password){
 
         AtomicBoolean res = new AtomicBoolean();
@@ -66,5 +94,57 @@ public class server_utils {
             e.printStackTrace();
         }
         return res.get();
+    }
+    public static boolean searchByUsername(String username){
+        AtomicBoolean res = new AtomicBoolean();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    Socket socket = new Socket(SERVER_IP,2511);
+                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                    out.writeUTF("Search,"+username);
+                    ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
+                    Response<?> response = (Response<?>) OIS.readObject();
+                    res.set((Boolean) response.getData());
+                    socket.close();
+                } catch (IOException | ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return res.get();
+    }
+    public static ArrayList<Message> getMessage(String username, String sendTo){
+        final ArrayList<Message>[] res = new ArrayList[]{new ArrayList<>()};
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = new Socket(SERVER_IP,2511);
+                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                    out.writeUTF("getMessages,"+username+","+sendTo);
+                    ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
+                    Response<?> response = (Response<?>) OIS.readObject();
+                    res[0] = (ArrayList<Message>) response.getData();
+                    socket.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return res[0];
     }
 }
