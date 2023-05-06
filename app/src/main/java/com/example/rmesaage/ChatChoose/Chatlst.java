@@ -1,5 +1,6 @@
 package com.example.rmesaage.ChatChoose;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -11,26 +12,14 @@ import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Chat.UserChat;
 import com.example.rmesaage.R;
 import com.example.rmesaage.User;
-import com.example.rmesaage.interfaces.MessageListener;
 import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
+import java.util.ArrayList;
 
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class Chatlst extends AppCompatActivity {
     private ChatAdapter chatAdapter;
-
-    private MessageListener messageListener = new MessageListener() {
-        @Override
-        public void onMessageReceived(Message message) {
-            chatAdapter.findAndUpdate(message);
-        }
-    };
-
-
-
 
 
     @Override
@@ -39,7 +28,6 @@ public class Chatlst extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
         Intent intent = getIntent();
         String username = intent.getStringExtra("author");
-        String password = intent.getStringExtra("password");
 
         databaseUtils utils = new databaseUtils(Chatlst.this);
         chatAdapter = new ChatAdapter(utils.getChats(username));
@@ -50,7 +38,7 @@ public class Chatlst extends AppCompatActivity {
             @Override
             public boolean onQueryTextSubmit(String query) {
                 if (server_utils.searchByUsername(query)){
-                    chatAdapter.bind(query);
+                    chatAdapter.bind(query,"");
                     return true;
                 }
                 return false;
@@ -65,9 +53,40 @@ public class Chatlst extends AppCompatActivity {
             @Override
             public void onItemClick(int position) {
                 Intent IntentToChat = new Intent(Chatlst.this, UserChat.class);
+                IntentToChat.putExtra("username",username);
+                IntentToChat.putExtra("SendTo",chatAdapter.getChatList().get(position).getName());
                 startActivity(IntentToChat);
             }
         });
-
+        Thread thread = new Thread(new Runnable() {
+            @SuppressLint("NotifyDataSetChanged")
+            @Override
+            public void run() {
+                ArrayList<ChatLstItem> chats = utils.getChats(username);
+                ArrayList<ArrayList<Message>> chatsFromServer = new ArrayList<>();
+                try {
+                    for (int i = 0; i < chats.size(); i++) {
+                        ArrayList<Message> server = server_utils.getMessage(username,chats.get(i).getName());
+                        if (server.size()!=0) chatsFromServer.add(server);
+                    }
+                    chatAdapter.chatList.clear();
+                    if (chatsFromServer.size()!=0){
+                        System.out.println(chats);
+                        for (int i = 0; i < chatsFromServer.size(); i++) {
+                            chatAdapter.chatList.add(new ChatLstItem(chatsFromServer.get(i).
+                                    get(chatsFromServer.get(i).size() - 1)
+                                    .getMessageUser(),
+                                    chatsFromServer.get(i).get(chatsFromServer.get(i).size() - 1).getText()
+                            ));
+                    }
+                        chatAdapter.notifyDataSetChanged();
+                    }
+                    Thread.sleep(3000);
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        });
+        thread.start();
     }
 }

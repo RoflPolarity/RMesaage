@@ -1,5 +1,6 @@
 package com.example.rmesaage.ChatChoose;
 
+import android.annotation.SuppressLint;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,7 +18,7 @@ import java.util.List;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
 
-    private List<ChatLstItem> chatList;
+    public List<ChatLstItem> chatList;
     private OnItemClickListener listener;
 
     public List<ChatLstItem> getChatList() {
@@ -80,18 +81,17 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             ivAvatar.setImageResource(0);
         }
     }
-    public void bind(String username){
-        chatList.clear();
-        chatList.add(new ChatLstItem("", username));
+
+    @SuppressLint("NotifyDataSetChanged")
+    public void setChatList(List<ChatLstItem> chatList) {
+        this.chatList = chatList;
         notifyDataSetChanged();
     }
 
-    public void findAndUpdate(Message message){
-        for (int i = 0; i < chatList.size(); i++) {
-            if (chatList.get(i).getName().equals(message.getMessageUser())){
-                chatList.set(i,new ChatLstItem(message.getMessageUser(),message.getMessageUser()));
-            }
-        }
+    @SuppressLint("NotifyDataSetChanged")
+    public void bind(String username,String lasMessage){
+        chatList.clear();
+        chatList.add(new ChatLstItem(lasMessage, username));
         notifyDataSetChanged();
     }
 }

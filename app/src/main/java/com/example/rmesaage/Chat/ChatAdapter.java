@@ -1,5 +1,6 @@
 package com.example.rmesaage.Chat;
 
+import android.annotation.SuppressLint;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,17 +11,22 @@ import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.R;
+import com.example.rmesaage.utils.server_utils;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
 
-    private List<Message> messageList;
+    public List<Message> messageList;
     private String currentUser;
 
-    public ChatAdapter(List<Message> messageList, String currentUser) {
+    public ChatAdapter(List<Message> messageList, String currentUser,String sendTo) {
         this.messageList = messageList;
         this.currentUser = currentUser;
+
     }
 
     public List<Message> getMessageList() {
@@ -73,6 +79,14 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                 }
             }
         }
+    }
+
+
+    public boolean updateDialog(ArrayList<Message> messages){
+        messageList.clear();
+        this.messageList = messages;
+        notifyDataSetChanged();
+        return true;
     }
 
     public boolean insert(Message message){
