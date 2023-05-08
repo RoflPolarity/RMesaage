@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageButton;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -41,7 +42,20 @@ public class UserChat extends AppCompatActivity {
         chatAdapter = new ChatAdapter(messages,username,sendTo);
         RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
         recyclerView.setAdapter(chatAdapter);
-        Button button = findViewById(R.id.button_send);
+        EditText editText = findViewById(R.id.edit_text_message);
+        editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View view, boolean b) {
+                recyclerView.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        recyclerView.scrollToPosition(chatAdapter.messageList.size() - 1);
+                    }
+                }, 0);
+            }
+        });
+
+        ImageButton button = findViewById(R.id.button_send);
         button.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -49,22 +63,25 @@ public class UserChat extends AppCompatActivity {
                 Message message = new Message(username,editText.getText().toString(),chatAdapter.getItemCount()+1);
                 chatAdapter.insert(message);
                 server_utils.sendMessage(username,sendTo,editText.getText().toString());
+                editText.setText("");
             }
         });
-        Thread thread = new Thread(new Runnable() {
-            @SuppressLint("NotifyDataSetChanged")
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                chatAdapter.updateDialog(server_utils.getMessage(username,sendTo));
-                try {
-                    Thread.sleep(250);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        chatAdapter.updateDialog(server_utils.getMessage(username,sendTo));
+                    }
+                });
             }
-        });
-        thread.start();
+        },0,1000);
     }
+
+
 
 
 

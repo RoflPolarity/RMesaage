@@ -29,6 +29,8 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         this.chatList = lst;
     }
 
+    public ChatAdapter(){}
+
     @NonNull
     @Override
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -66,28 +68,18 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     static class ChatViewHolder extends RecyclerView.ViewHolder {
         private TextView tvName;
         private TextView tvLastMessage;
-        private ImageView ivAvatar;
 
         public ChatViewHolder(View itemView) {
             super(itemView);
             tvName = itemView.findViewById(R.id.textView_name);
             tvLastMessage = itemView.findViewById(R.id.textView_last_message);
-            ivAvatar = itemView.findViewById(R.id.imageView_avatar);
         }
 
         public void bind(ChatLstItem messages) {
             tvName.setText(messages.getName());
             tvLastMessage.setText(messages.getLastMessage());
-            ivAvatar.setImageResource(0);
         }
     }
-
-    @SuppressLint("NotifyDataSetChanged")
-    public void setChatList(List<ChatLstItem> chatList) {
-        this.chatList = chatList;
-        notifyDataSetChanged();
-    }
-
     @SuppressLint("NotifyDataSetChanged")
     public void bind(String username,String lasMessage){
         chatList.clear();

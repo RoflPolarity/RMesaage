@@ -28,7 +28,7 @@ public class server_utils {
                     res.set((Boolean) response.getData());
                     socket.close();
                 } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
+                    res.set(false);
                 }
             }
         });
@@ -55,7 +55,7 @@ public class server_utils {
                     res.set((Boolean) response.getData());
                     socket.close();
                 }catch (Exception e){
-                    e.printStackTrace();
+                    res.set(false);
                 }
             }
         });
@@ -83,7 +83,7 @@ public class server_utils {
                     res.set((boolean) response.getData());
                     socket.close();
                 } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
+                    res.set(false);
                 }
             }
         });
@@ -109,7 +109,7 @@ public class server_utils {
                     res.set((Boolean) response.getData());
                     socket.close();
                 } catch (IOException | ClassNotFoundException e) {
-                    e.printStackTrace();
+                    res.set(false);
                 }
             }
         });
@@ -133,6 +133,34 @@ public class server_utils {
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
                     Response<?> response = (Response<?>) OIS.readObject();
                     res[0] = (ArrayList<Message>) response.getData();
+                    socket.close();
+                }catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        return res[0];
+    }
+    public static ArrayList<Message> getChats(String username){
+        final ArrayList<Message>[] res = new ArrayList[]{new ArrayList<>()};
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    Socket socket = new Socket(SERVER_IP, 2511);
+                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                    out.writeUTF("GetChatLst," + username);
+                    ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
+                    Response<?> response = (Response<?>) OIS.readObject();
+                    ArrayList<Message> ex = (ArrayList<Message>) response.getData();
+                    res[0] = ex;
                     socket.close();
                 }catch (Exception e){
                     e.printStackTrace();

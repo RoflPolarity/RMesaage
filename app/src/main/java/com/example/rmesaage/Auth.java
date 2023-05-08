@@ -1,15 +1,21 @@
 package com.example.rmesaage;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.rmesaage.ChatChoose.Chatlst;
+import com.example.rmesaage.utils.SaveFile;
 import com.example.rmesaage.utils.server_utils;
+
+import java.io.File;
 
 public class Auth extends AppCompatActivity {
 
@@ -17,6 +23,16 @@ public class Auth extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
+        SharedPreferences preferences = getSharedPreferences("myPrefs",MODE_PRIVATE);
+        try{
+        if (server_utils.auth(preferences.getString("username",""),preferences.getString("password",""))){
+            Intent intent = new Intent(Auth.this,Chatlst.class);
+            intent.putExtra("author",preferences.getString("username",""));
+            intent.putExtra("password",preferences.getString("password",""));
+            startActivity(intent);
+            }
+        }catch (Exception ignored){
+        }
         Button btnAuth = findViewById(R.id.loginButton);
         btnAuth.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -26,9 +42,12 @@ public class Auth extends AppCompatActivity {
                 if (server_utils.auth(username.getText().toString(),password.getText().toString())){
                     Intent intent = new Intent(Auth.this, Chatlst.class);
                     intent.putExtra("author",username.getText().toString());
-                    intent.putExtra("password",password.getText().toString());
                     startActivity(intent);
-                }else btnAuth.setText("2");
+                }else {
+                    Toast toast = Toast.makeText(getApplicationContext(), "Failed to establish a connection with the server", Toast.LENGTH_SHORT);
+                    toast.setGravity(Gravity.CENTER, 0, 0);
+                    toast.show();
+                }
             }
         });
         Button btnRegister = findViewById(R.id.button_signup);

@@ -16,6 +16,8 @@ import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
 import java.util.ArrayList;
+import java.util.Timer;
+import java.util.TimerTask;
 
 
 public class Chatlst extends AppCompatActivity {
@@ -28,9 +30,7 @@ public class Chatlst extends AppCompatActivity {
         setContentView(R.layout.activity_chat);
         Intent intent = getIntent();
         String username = intent.getStringExtra("author");
-
-        databaseUtils utils = new databaseUtils(Chatlst.this);
-        chatAdapter = new ChatAdapter(utils.getChats(username));
+        chatAdapter = new ChatAdapter(new ArrayList<>());
         RecyclerView view = findViewById(R.id.recyclerview_chats);
         view.setAdapter(chatAdapter);
         SearchView searchView = findViewById(R.id.search_view);
@@ -58,35 +58,23 @@ public class Chatlst extends AppCompatActivity {
                 startActivity(IntentToChat);
             }
         });
-        Thread thread = new Thread(new Runnable() {
-            @SuppressLint("NotifyDataSetChanged")
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
             @Override
             public void run() {
-                ArrayList<ChatLstItem> chats = utils.getChats(username);
-                ArrayList<ArrayList<Message>> chatsFromServer = new ArrayList<>();
-                try {
-                    for (int i = 0; i < chats.size(); i++) {
-                        ArrayList<Message> server = server_utils.getMessage(username,chats.get(i).getName());
-                        if (server.size()!=0) chatsFromServer.add(server);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        ArrayList<Message> messages = server_utils.getChats(username);
+                        chatAdapter.chatList.clear();
+                        for (int i = 0; i < messages.size(); i++) {
+                            chatAdapter.chatList.add(new ChatLstItem(messages.get(i).getText(),messages.get(i).getMessageUser()));
+                            chatAdapter.notifyDataSetChanged();
+                        }
+
                     }
-                    chatAdapter.chatList.clear();
-                    if (chatsFromServer.size()!=0){
-                        System.out.println(chats);
-                        for (int i = 0; i < chatsFromServer.size(); i++) {
-                            chatAdapter.chatList.add(new ChatLstItem(chatsFromServer.get(i).
-                                    get(chatsFromServer.get(i).size() - 1)
-                                    .getMessageUser(),
-                                    chatsFromServer.get(i).get(chatsFromServer.get(i).size() - 1).getText()
-                            ));
-                    }
-                        chatAdapter.notifyDataSetChanged();
-                    }
-                    Thread.sleep(3000);
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
+                });
             }
-        });
-        thread.start();
+        },0,1500);
     }
 }

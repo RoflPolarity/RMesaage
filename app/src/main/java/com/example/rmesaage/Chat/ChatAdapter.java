@@ -58,7 +58,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         public ChatViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMessage = itemView.findViewById(R.id.text_view_message);
-            name = itemView.findViewById(R.id.text_view_name);
         }
 
         public void bind(Message message) {

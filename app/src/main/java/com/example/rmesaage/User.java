@@ -8,7 +8,7 @@ public class User implements Serializable {
     private String password;
     private String ip;
     private String port;
-    public User(String username, String password, String ip,String port){
+    public User(String username, String password){
         this.username = username;
         this.password = password;
         this.ip = ip;
@@ -34,13 +34,12 @@ public class User implements Serializable {
 
     public static User valueOf(String s){
         String[] str = s.split(",");
-        String[] ip = str[2].split(":");
-        return new User(str[0],str[1],ip[0],ip[1]);
+        return new User(str[0],str[1]);
     }
 
     public static User valueOfCSV(String s){
         String[] str = s.split(",");
-        return new User(str[0],str[1],str[2],str[3]);
+        return new User(str[0],str[1]);
     }
 
     public String getUsername() {
