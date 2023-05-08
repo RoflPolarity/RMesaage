@@ -4,8 +4,10 @@ plugins {
 repositories {
     google()
     mavenCentral()
-    maven {url "https://mvnrepository.com/artifact/org.fourthline.cling"}
-    maven { url "https://jitpack.io" }
+}
+
+dependencies{
+    implementation 'com.github.bumptech.glide:glide:4.15.1'
 }
 android {
     namespace 'com.example.rmesaage'

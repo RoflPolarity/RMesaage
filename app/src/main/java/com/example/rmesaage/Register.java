@@ -12,10 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.rmesaage.ChatChoose.Chatlst;
-import com.example.rmesaage.utils.SaveFile;
 import com.example.rmesaage.utils.server_utils;
-
-import java.io.File;
 
 public class Register extends AppCompatActivity {
     private EditText username,password;
