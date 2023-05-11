@@ -13,9 +13,8 @@
         android:layout_height="0dp"
         android:layout_weight="1"
         app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
-        app:spanCount="2"
+        app:spanCount="4"
         tools:listitem="@layout/media_item"
-        android:layout_margin="@dimen/material_emphasis_medium"
         />
 
 
@@ -27,14 +26,14 @@
         android:padding="16dp">
 
         <ImageButton
-            android:id="@+id/button_select"
+            android:id="@+id/button_cancel"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:layout_marginRight="25dp"
             android:background="@drawable/cancel_foreground" />
 
         <ImageButton
-            android:id="@+id/button_cancel"
+            android:id="@+id/button_select"
             android:layout_width="50dp"
             android:layout_height="50dp"
             android:background="@drawable/apply_foreground" />
