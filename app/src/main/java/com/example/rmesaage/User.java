@@ -1,7 +1,6 @@
 package com.example.rmesaage;
 
 import java.io.Serializable;
-import java.util.Arrays;
 
 public class User implements Serializable {
     private String username;

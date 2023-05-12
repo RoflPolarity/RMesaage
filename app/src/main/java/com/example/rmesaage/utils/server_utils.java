@@ -2,13 +2,13 @@ package com.example.rmesaage.utils;
 
 import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Response;
-import com.example.rmesaage.User;
 
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class server_utils {
@@ -37,6 +37,37 @@ public class server_utils {
             thread.join();
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+        return res.get();
+    }
+
+    public static boolean sendMessage(String username,String sendTo,ArrayList<byte[]> text){
+        AtomicBoolean res = new AtomicBoolean();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < text.size(); i++) {
+            builder.append(Arrays.toString(text.get(i))).append(" --- ");
+        }
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try{
+                    Socket socket = new Socket(SERVER_IP, 2511);
+                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
+                    out.writeUTF("SendMessage,"+username+","+sendTo+","+builder);
+                    ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
+                    Response<?> response = (Response<?>) OIS.readObject();
+                    res.set((Boolean) response.getData());
+                    socket.close();
+                }catch (Exception e){
+                    res.set(false);
+                }
+            }
+        });
+        thread.start();
+        try {
+            thread.join();
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
         }
         return res.get();
     }

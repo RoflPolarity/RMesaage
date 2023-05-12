@@ -1,16 +1,10 @@
 package com.example.rmesaage.Chat.MediaPicker;
 
-import android.app.Activity;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.os.Bundle;
-import android.text.SpannableString;
-import android.text.Spanned;
-import android.text.style.ImageSpan;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
 
@@ -18,28 +12,35 @@ import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.rmesaage.Chat.ChatAdapter;
+import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.R;
-import com.example.rmesaage.utils.OnImageSelectedListener;
-import com.squareup.picasso.Picasso;
+import com.example.rmesaage.utils.server_utils;
 
+import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
 
 public class MyFragment extends Fragment {
 
-    private OnImageSelectedListener mListener;
 
     private Md_adapter adapter;
     private static FrameLayout frame;
+    private static ChatAdapter chat;
+    private static String name;
+    private static String send;
     public MyFragment() {
         // Пустой конструктор обязателен
     }
 
-    public static MyFragment newInstance(Md_adapter adapter, FrameLayout frameLayout) {
+    public static MyFragment newInstance(Md_adapter adapter, FrameLayout frameLayout, ChatAdapter chatAdapter, String username, String sendTo) {
         MyFragment fragment = new MyFragment();
         Bundle args = new Bundle();
         args.putSerializable("adapter", adapter);
         fragment.setArguments(args);
         frame = frameLayout;
+        chat = chatAdapter;
+        name = username;
+        send = sendTo;
         return fragment;
     }
 
@@ -51,9 +52,6 @@ public class MyFragment extends Fragment {
             adapter = (Md_adapter) getArguments().getSerializable("adapter");
         }
 
-    }
-    public void setOnImageSelectedListener(OnImageSelectedListener listener) {
-        mListener = listener;
     }
 
     @Override
@@ -74,11 +72,14 @@ public class MyFragment extends Fragment {
             @Override
             public void onClick(View view) {
                 ArrayList<Md_adapter.ViewHolder> arrayList = adapter.selected;
-                ArrayList<String> selectedImagePaths = new ArrayList<>();
-                for (int i = 0; i < arrayList.size(); i++)selectedImagePaths.add(arrayList.get(i).imagePath);
-                if (mListener != null) {
-                    mListener.onImageSelected(selectedImagePaths);
+                ArrayList<byte[]> bytes = new ArrayList<>();
+                for (int i = 0; i < arrayList.size(); i++){
+                    ByteArrayOutputStream stream = new ByteArrayOutputStream();
+                    arrayList.get(i).map.compress(Bitmap.CompressFormat.JPEG,100,stream);
+                    bytes.add(stream.toByteArray());
                 }
+                chat.insert(new Message(name,bytes));
+                //server_utils.sendMessage(name,send,bytes);
             }
         });
         return view;

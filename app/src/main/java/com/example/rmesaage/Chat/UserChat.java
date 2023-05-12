@@ -9,7 +9,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.Image;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.text.SpannableStringBuilder;
@@ -31,16 +30,14 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.rmesaage.Chat.MediaPicker.Md_adapter;
 import com.example.rmesaage.Chat.MediaPicker.MyFragment;
 import com.example.rmesaage.R;
-import com.example.rmesaage.utils.OnImageSelectedListener;
 import com.example.rmesaage.utils.server_utils;
-
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class UserChat extends AppCompatActivity implements OnImageSelectedListener {
+public class UserChat extends AppCompatActivity {
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     ChatAdapter chatAdapter;
 
@@ -57,19 +54,20 @@ public class UserChat extends AppCompatActivity implements OnImageSelectedListen
         name.setText(sendTo);
 
 
+        chatAdapter = new ChatAdapter(messages,username);
+        RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
+        recyclerView.setAdapter(chatAdapter);
+
         Md_adapter adapter = new Md_adapter(getAllMedia(),getApplicationContext());
         verifyStoragePermissions();
         FrameLayout frameLayout = findViewById(R.id.fragment_container);
-        MyFragment fragment = MyFragment.newInstance(adapter,frameLayout);
+        MyFragment fragment = MyFragment.newInstance(adapter,frameLayout,chatAdapter,username,sendTo);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.add(R.id.fragment_container, fragment);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
 
-        chatAdapter = new ChatAdapter(messages,username,sendTo);
-        RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
-        recyclerView.setAdapter(chatAdapter);
         EditText editText = findViewById(R.id.edit_text_message);
         editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -106,7 +104,7 @@ public class UserChat extends AppCompatActivity implements OnImageSelectedListen
                     }
                 });
             }
-        },0,1000);
+        },0,100000);
 
         ImageButton attach = findViewById(R.id.attach);
         final boolean[] visible = {false};
@@ -144,33 +142,6 @@ public class UserChat extends AppCompatActivity implements OnImageSelectedListen
         return mediaList;
     }
 
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-
-        EditText editText = findViewById(R.id.edit_text_message);
-        System.out.println(resultCode);
-        if (resultCode == Activity.RESULT_OK) {
-            ArrayList<String> selectedImagePaths = data.getStringArrayListExtra("selectedImagePaths");
-            System.out.println(selectedImagePaths);
-            if (selectedImagePaths != null && selectedImagePaths.size() > 0) {
-                SpannableStringBuilder builder = new SpannableStringBuilder(editText.getText());
-                for (String imagePath : selectedImagePaths) {
-                    Bitmap bitmap = BitmapFactory.decodeFile(imagePath);
-                    if (bitmap != null) {
-                        Drawable drawable = new BitmapDrawable(getResources(), bitmap);
-                        drawable.setBounds(0, 0, drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight());
-                        ImageSpan span = new ImageSpan(drawable, ImageSpan.ALIGN_BASELINE);
-                        builder.append(" ");
-                        builder.setSpan(span, builder.length() - 1, builder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
-                    }
-                }
-                editText.setText(builder);
-                editText.setSelection(builder.length());
-            }
-        }
-    }
-
 
     private void verifyStoragePermissions() {
         String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE};
@@ -181,8 +152,4 @@ public class UserChat extends AppCompatActivity implements OnImageSelectedListen
         }
     }
 
-    @Override
-    public void onImageSelected(ArrayList<String> selectedImagePaths) {
-
-    }
 }

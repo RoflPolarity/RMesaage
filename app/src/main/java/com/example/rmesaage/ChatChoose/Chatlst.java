@@ -1,6 +1,5 @@
 package com.example.rmesaage.ChatChoose;
 
-import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.os.Bundle;
 
@@ -11,8 +10,6 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Chat.UserChat;
 import com.example.rmesaage.R;
-import com.example.rmesaage.User;
-import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
 import java.util.ArrayList;

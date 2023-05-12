@@ -1,6 +1,7 @@
 package com.example.rmesaage.Chat;
 
-import android.annotation.SuppressLint;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -8,25 +9,22 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
+import androidx.recyclerview.widget.GridLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.R;
-import com.example.rmesaage.utils.server_utils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
 
     public List<Message> messageList;
     private String currentUser;
 
-    public ChatAdapter(List<Message> messageList, String currentUser,String sendTo) {
+    public ChatAdapter(List<Message> messageList, String currentUser) {
         this.messageList = messageList;
         this.currentUser = currentUser;
-
     }
 
     public List<Message> getMessageList() {
@@ -53,18 +51,27 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
 
     public class ChatViewHolder extends RecyclerView.ViewHolder {
         private TextView textViewMessage;
-        private TextView name;
+        private RecyclerView recyclerView;
+
 
         public ChatViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMessage = itemView.findViewById(R.id.text_view_message);
+            recyclerView = itemView.findViewById(R.id.rv_media_list);
         }
 
         public void bind(Message message) {
-            if (message.getText().isEmpty()) {
+            if (message.getBitMaps()!=null){
                 textViewMessage.setVisibility(View.GONE);
-                name.setVisibility(View.GONE);
-            } else {
+                recyclerView.setVisibility(View.VISIBLE);
+                List<Bitmap> medias = new ArrayList<>();
+                for (int i = 0; i < message.getBitMaps().size(); i++) {
+                    medias.add(BitmapFactory.decodeByteArray(message.getBitMaps().get(i),0,message.getBitMaps().get(i).length));
+                }
+
+                MediaAdapter mediaAdapter = new MediaAdapter(medias);
+                recyclerView.setAdapter(mediaAdapter);
+            }else {
                 textViewMessage.setVisibility(View.VISIBLE);
                 textViewMessage.setText(message.getText());
                 if (message.getMessageUser().equals(currentUser)) {
@@ -89,7 +96,10 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     }
 
     public boolean insert(Message message){
+
         messageList.add(message);
+        System.out.println(messageList.size());
+        System.out.println(messageList.get(messageList.size()-1).getBitMaps());
         notifyDataSetChanged();
         return true;
     }

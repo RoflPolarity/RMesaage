@@ -2,10 +2,10 @@ package com.example.rmesaage.Chat.MediaPicker;
 
 import android.content.Context;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 
 import androidx.annotation.NonNull;
@@ -15,7 +15,6 @@ import com.example.rmesaage.R;
 import com.squareup.picasso.Picasso;
 
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,7 +47,7 @@ public class Md_adapter extends RecyclerView.Adapter<Md_adapter.ViewHolder> impl
                     .resize(250,250)
                     .centerCrop()
                     .into(holder.imageView);
-            holder.imagePath=path;
+            holder.map= BitmapFactory.decodeFile(path);
         }
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -65,7 +64,7 @@ public class Md_adapter extends RecyclerView.Adapter<Md_adapter.ViewHolder> impl
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
-        String imagePath;
+        Bitmap map;
         public ViewHolder(View itemView) {
             super(itemView);
             imageView = itemView.findViewById(R.id.MediaView);
