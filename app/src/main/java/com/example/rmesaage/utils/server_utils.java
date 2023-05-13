@@ -44,9 +44,13 @@ public class server_utils {
     public static boolean sendMessage(String username,String sendTo,ArrayList<byte[]> text){
         AtomicBoolean res = new AtomicBoolean();
         StringBuilder builder = new StringBuilder();
-        for (int i = 0; i < text.size(); i++) {
-            builder.append(Arrays.toString(text.get(i))).append(" --- ");
+        if (text.size()==1) builder.append(Arrays.toString(text.get(0)).replace("[","").replace("]",""));
+        else {
+            for (int i = 0; i < text.size(); i++) {
+                builder.append(Arrays.toString(text.get(i)).replace("[","").replace("]","")).append(" --- ");
+            }
         }
+        System.out.println(builder);
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {

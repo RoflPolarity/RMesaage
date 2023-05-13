@@ -28,7 +28,6 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             tools:listitem="@layout/media_item"
-            app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
             android:visibility="gone"
             />
 

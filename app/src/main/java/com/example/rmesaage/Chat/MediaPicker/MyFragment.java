@@ -79,7 +79,8 @@ public class MyFragment extends Fragment {
                     bytes.add(stream.toByteArray());
                 }
                 chat.insert(new Message(name,bytes));
-                //server_utils.sendMessage(name,send,bytes);
+                adapter.selected.clear();
+                server_utils.sendMessage(name,send,bytes);
             }
         });
         return view;
