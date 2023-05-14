@@ -6,6 +6,7 @@ import com.example.rmesaage.Response;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,11 +21,12 @@ public class server_utils {
             @Override
             public void run() {
                 try{
+                    Response response = new Response("Auth",username,password,null,null);
                     Socket socket = new Socket(SERVER_IP,2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("Auth,"+username+","+password);
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(response);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    Response<?> response = (Response<?>) OIS.readObject();
+                    response = (Response<?>) OIS.readObject();
                     res.set((Boolean) response.getData());
                     socket.close();
                 } catch (IOException | ClassNotFoundException e) {
@@ -43,26 +45,20 @@ public class server_utils {
 
     public static boolean sendMessage(String username,String sendTo,ArrayList<byte[]> text){
         AtomicBoolean res = new AtomicBoolean();
-        StringBuilder builder = new StringBuilder();
-        if (text.size()==1) builder.append(Arrays.toString(text.get(0)).replace("[","").replace("]",""));
-        else {
-            for (int i = 0; i < text.size(); i++) {
-                builder.append(Arrays.toString(text.get(i)).replace("[","").replace("]","")).append(" --- ");
-            }
-        }
-        System.out.println(builder);
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
                 try{
+                    Response<?> response = new Response<>("SendMessage",username,null,sendTo,text);
                     Socket socket = new Socket(SERVER_IP, 2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("SendMessage,"+username+","+sendTo+","+builder);
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(response);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    Response<?> response = (Response<?>) OIS.readObject();
+                    response = (Response<?>) OIS.readObject();
                     res.set((Boolean) response.getData());
                     socket.close();
                 }catch (Exception e){
+                    e.printStackTrace();
                     res.set(false);
                 }
             }
@@ -82,11 +78,12 @@ public class server_utils {
             @Override
             public void run() {
                 try{
+                    Response<?> response = new Response<>("SendMessage",username,null,sendTo,text);
                     Socket socket = new Socket(SERVER_IP, 2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("SendMessage,"+username+","+sendTo+","+text);
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(response);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    Response<?> response = (Response<?>) OIS.readObject();
+                    response = (Response<?>) OIS.readObject();
                     res.set((Boolean) response.getData());
                     socket.close();
                 }catch (Exception e){
@@ -110,11 +107,12 @@ public class server_utils {
             @Override
             public void run() {
                 try{
-                    Socket socket = new Socket(SERVER_IP,2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("Register,"+username+","+password);
+                    Response<?> response = new Response<>("Register",username,password,null,null);
+                    Socket socket = new Socket(SERVER_IP, 2511);
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(response);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    Response<?> response = (Response<?>) OIS.readObject();
+                    response = (Response<?>) OIS.readObject();
                     res.set((boolean) response.getData());
                     socket.close();
                 } catch (IOException | ClassNotFoundException e) {
@@ -136,11 +134,12 @@ public class server_utils {
             @Override
             public void run() {
                 try{
-                    Socket socket = new Socket(SERVER_IP,2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("Search,"+username);
+                    Response<?> response = new Response<>("Search",username,null,null,null);
+                    Socket socket = new Socket(SERVER_IP, 2511);
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(response);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    Response<?> response = (Response<?>) OIS.readObject();
+                    response = (Response<?>) OIS.readObject();
                     res.set((Boolean) response.getData());
                     socket.close();
                 } catch (IOException | ClassNotFoundException e) {
@@ -162,11 +161,12 @@ public class server_utils {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket(SERVER_IP,2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("getMessages,"+username+","+sendTo);
+                    Response<?> response = new Response<>("getMessages",username,null,sendTo,null);
+                    Socket socket = new Socket(SERVER_IP, 2511);
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(response);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    Response<?> response = (Response<?>) OIS.readObject();
+                    response = (Response<?>) OIS.readObject();
                     res[0] = (ArrayList<Message>) response.getData();
                     socket.close();
                 }catch (Exception e){
@@ -189,11 +189,12 @@ public class server_utils {
             @Override
             public void run() {
                 try {
+                    Response<?> response = new Response<>("GetChatLst",username,null,null,null);
                     Socket socket = new Socket(SERVER_IP, 2511);
-                    DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-                    out.writeUTF("GetChatLst," + username);
+                    ObjectOutputStream out = new ObjectOutputStream(socket.getOutputStream());
+                    out.writeObject(response);
                     ObjectInputStream OIS = new ObjectInputStream(socket.getInputStream());
-                    Response<?> response = (Response<?>) OIS.readObject();
+                    response = (Response<?>) OIS.readObject();
                     ArrayList<Message> ex = (ArrayList<Message>) response.getData();
                     res[0] = ex;
                     socket.close();

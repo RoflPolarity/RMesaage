@@ -104,7 +104,7 @@ public class UserChat extends AppCompatActivity {
                     }
                 });
             }
-        },0,100000);
+        },0,1000);
 
         ImageButton attach = findViewById(R.id.attach);
         final boolean[] visible = {false};
