@@ -22,6 +22,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.rmesaage.Chat.MediaPicker.Md_adapter;
 import com.example.rmesaage.Chat.MediaPicker.MyFragment;
 import com.example.rmesaage.R;
+import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
 import java.util.ArrayList;
@@ -40,8 +41,8 @@ public class UserChat extends AppCompatActivity {
         Intent intent = getIntent();
         String username = intent.getStringExtra("username");
         String sendTo = intent.getStringExtra("SendTo");
-
-        ArrayList<Message> messages = server_utils.getMessage(username,sendTo);
+        databaseUtils utils = new databaseUtils(getApplicationContext());
+        ArrayList<Message> messages = utils.getMsList(username,sendTo);
         TextView name = findViewById(R.id.ChatName);
         name.setText(sendTo);
 
@@ -80,7 +81,7 @@ public class UserChat extends AppCompatActivity {
                 EditText editText = findViewById(R.id.edit_text_message);
                 Message message = new Message(username,editText.getText().toString(),chatAdapter.getItemCount()+1);
                 chatAdapter.insert(message);
-                server_utils.sendMessage(message);
+                server_utils.sendMessage(message,getApplicationContext());
                 editText.setText("");
             }
         });
@@ -92,7 +93,7 @@ public class UserChat extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        chatAdapter.updateDialog(server_utils.getMessage(username,sendTo));
+                        chatAdapter.updateDialog(utils.getMsList(username,sendTo));
                     }
                 });
             }

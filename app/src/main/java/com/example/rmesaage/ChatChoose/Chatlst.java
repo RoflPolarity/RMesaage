@@ -10,6 +10,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Chat.UserChat;
 import com.example.rmesaage.R;
+import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
 import java.util.ArrayList;
@@ -31,6 +32,9 @@ public class Chatlst extends AppCompatActivity {
         RecyclerView view = findViewById(R.id.recyclerview_chats);
         view.setAdapter(chatAdapter);
         SearchView searchView = findViewById(R.id.search_view);
+        Timer timer = new Timer();
+        databaseUtils databaseUtils = new databaseUtils(getApplicationContext());
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
@@ -55,20 +59,17 @@ public class Chatlst extends AppCompatActivity {
                 startActivity(IntentToChat);
             }
         });
-        Timer timer = new Timer();
+
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        ArrayList<Message> messages = server_utils.getChats(username);
+                        ArrayList<ChatLstItem> messages = databaseUtils.getChats(username);
                         chatAdapter.chatList.clear();
-                        for (int i = 0; i < messages.size(); i++) {
-                            chatAdapter.chatList.add(new ChatLstItem(messages.get(i).getText(),messages.get(i).getMessageUser()));
-                            chatAdapter.notifyDataSetChanged();
-                        }
-
+                        chatAdapter.chatList.addAll(messages);
+                        chatAdapter.notifyDataSetChanged();
                     }
                 });
             }

@@ -80,7 +80,7 @@ public class MyFragment extends Fragment {
                 }
                 chat.insert(new Message(name,bytes));
                 adapter.selected.clear();
-                server_utils.sendMessage(new Message(0,name,null,bytes,send));
+                server_utils.sendMessage(new Message(0,name,null,bytes,send),getContext());
             }
         });
         return view;

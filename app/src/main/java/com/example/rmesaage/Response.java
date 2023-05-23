@@ -15,6 +15,10 @@ public class Response<T>  implements Serializable {
         this.sendTo = sendTo;
         this.type = type;
     }
+    public Response(String comma,T data){
+        this.comma = comma;
+        this.data = data;
+    }
     public Response(T data){
         this.data = data;
     }
