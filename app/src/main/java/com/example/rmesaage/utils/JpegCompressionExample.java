@@ -10,7 +10,7 @@ public class JpegCompressionExample {
     public static byte[] compress(byte[] image) throws IOException {
         Bitmap bitmap = BitmapFactory.decodeByteArray(image, 0, image.length);
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 60, outputStream);
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, outputStream);
         return outputStream.toByteArray();
     }
 }

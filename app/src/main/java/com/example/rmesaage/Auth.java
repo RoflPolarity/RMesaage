@@ -21,12 +21,14 @@ public class Auth extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_auth);
         SharedPreferences preferences = getSharedPreferences("myPrefs",MODE_PRIVATE);
+
         try{
+        server_utils.initializeStreams();
         if (server_utils.auth(preferences.getString("username",""),preferences.getString("password",""))){
             Intent intent = new Intent(Auth.this,Chatlst.class);
             intent.putExtra("author",preferences.getString("username",""));
             intent.putExtra("password",preferences.getString("password",""));
-            startActivity(intent);
+            //startActivity(intent);
             }
         }catch (Exception ignored){
         }

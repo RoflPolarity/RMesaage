@@ -1,19 +1,11 @@
 package com.example.rmesaage.Chat;
 
 import android.Manifest;
-import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.drawable.BitmapDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.provider.MediaStore;
-import android.text.SpannableStringBuilder;
-import android.text.Spanned;
-import android.text.style.ImageSpan;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
@@ -88,7 +80,7 @@ public class UserChat extends AppCompatActivity {
                 EditText editText = findViewById(R.id.edit_text_message);
                 Message message = new Message(username,editText.getText().toString(),chatAdapter.getItemCount()+1);
                 chatAdapter.insert(message);
-                server_utils.sendMessage(username,sendTo,editText.getText().toString());
+                server_utils.sendMessage(message);
                 editText.setText("");
             }
         });
