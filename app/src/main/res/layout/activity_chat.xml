@@ -14,13 +14,14 @@
         android:elevation="4dp"
         android:theme="@style/ThemeOverlay.AppCompat.ActionBar">
 
-        <ImageView
-            android:id="@+id/profile_button"
+
+        <ImageButton
+            android:id="@+id/sychronize"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="start"
             android:padding="15dp"
-            android:src="@drawable/ic_round_account_circle_24" />
+            android:src="@drawable/baseline_refresh_24"/>
 
         <androidx.appcompat.widget.SearchView
             android:id="@+id/search_view"

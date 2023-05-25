@@ -73,7 +73,7 @@ public class server_utils{
                     res.set(true);
                    databaseUtils utils = new databaseUtils(context);
                     for (int i = 0; i < lst.size(); i++) {
-                        utils.insert(lst.get(i),"messages");
+                        utils.insert(lst.get(i));
                     }
                 }
             } catch (Exception e) {
@@ -108,5 +108,18 @@ public class server_utils{
                     res.set(false);
                 }
         return res.get();
+    }
+    public static ArrayList<Message> sync(String username){
+        try{
+            Response<?> response = new Response<>("Sync",username,null,null,null,"user");
+            out.writeObject(response);
+            out.flush();
+            response = (Response<?>) OIS.readObject();
+            ArrayList<Message> res = (ArrayList<Message>) response.getData();
+            return res;
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+        return null;
     }
 }

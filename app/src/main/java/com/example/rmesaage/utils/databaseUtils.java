@@ -11,9 +11,10 @@ import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.ChatChoose.ChatLstItem;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.Set;
 
 public class databaseUtils{
-    private static final int DB_VERSION = 1;
     private static final String TABLE_NAME = "messages";
     private SQLiteDatabase database;
 
@@ -23,11 +24,11 @@ public class databaseUtils{
     public databaseUtils(Context context) {
         database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
         System.out.println("connected to database");
-        createTableIfNotExists(TABLE_NAME);
+        createTableIfNotExists();
     }
 
-    public void createTableIfNotExists(String ChatName) {
-        String createTableQuery = "CREATE TABLE IF NOT EXISTS " + ChatName +
+    public void createTableIfNotExists() {
+        String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME +
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT, author TEXT, sendTo TEXT, text TEXT)";
         database.execSQL(createTableQuery);
     }
@@ -35,18 +36,12 @@ public class databaseUtils{
 
     public ArrayList<ChatLstItem> getChats(String author) {
         ArrayList<ChatLstItem> chats = new ArrayList<>();
-        ArrayList<String> sendTo = new ArrayList<>();
+        Set<String> sendTo = new HashSet<>();
         String selection = "author=?";
         String[] selectionArgs = new String[]{author};
 
         Cursor cursor = database.query(TABLE_NAME,null,selection,selectionArgs,null,null,null);
         int columnIndexSendTo = cursor.getColumnIndex("sendTo");
-        if (columnIndexSendTo == -1) {
-            // Handle the case when the column is not found
-            cursor.close();
-            return chats;
-        }
-
         while (cursor.moveToNext()) {
             String sendToValue = cursor.getString(columnIndexSendTo);
             if (sendToValue != null) {
@@ -54,7 +49,6 @@ public class databaseUtils{
             }
         }
         cursor.close();
-
         for (String recipient : sendTo) {
             ArrayList<Message> msList = getMsList(author, recipient);
             if (!msList.isEmpty()) {
@@ -95,7 +89,6 @@ public class databaseUtils{
                     }
                 }
                 cursor.close();
-                System.out.println("true");
 
             }
         });
@@ -107,11 +100,11 @@ public class databaseUtils{
         }
         return msList;
     }
-    public void insert(Message message, String tableName) {
+    public void insert(Message message) {
         ContentValues values = new ContentValues();
         values.put("author", message.getMessageUser());
         values.put("sendTo", message.getSendTo());
         values.put("text", message.getText());
-        database.insert(tableName, null, values);
+        database.insert(TABLE_NAME, null, values);
     }
 }
