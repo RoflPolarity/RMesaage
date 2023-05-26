@@ -41,8 +41,7 @@ public class UserChat extends AppCompatActivity {
         Intent intent = getIntent();
         String username = intent.getStringExtra("username");
         String sendTo = intent.getStringExtra("SendTo");
-        databaseUtils utils = new databaseUtils(getApplicationContext());
-        ArrayList<Message> messages = utils.getMsList(username,sendTo);
+        ArrayList<Message> messages = databaseUtils.getMsList(username,sendTo);
         TextView name = findViewById(R.id.ChatName);
         name.setText(sendTo);
 
@@ -79,9 +78,20 @@ public class UserChat extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 EditText editText = findViewById(R.id.edit_text_message);
-                Message message = new Message(username,editText.getText().toString(),chatAdapter.getItemCount()+1);
+                Message message = new Message(chatAdapter.getItemCount()+1,username,editText.getText().toString(),null,sendTo);
                 chatAdapter.insert(message);
-                server_utils.sendMessage(message,getApplicationContext());
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        server_utils.sendMessage(message,getApplicationContext());
+                    }
+                });
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
                 editText.setText("");
             }
         });
@@ -93,7 +103,7 @@ public class UserChat extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        chatAdapter.updateDialog(utils.getMsList(username,sendTo));
+                        chatAdapter.updateDialog(databaseUtils.getMsList(username,sendTo));
                     }
                 });
             }

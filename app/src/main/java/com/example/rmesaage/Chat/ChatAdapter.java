@@ -121,10 +121,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     }
 
     public boolean insert(Message message){
-
         messageList.add(message);
-        System.out.println(messageList.size());
-        System.out.println(messageList.get(messageList.size()-1).getBitMaps());
         notifyDataSetChanged();
         return true;
     }

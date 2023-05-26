@@ -14,6 +14,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.example.rmesaage.ChatChoose.Chatlst;
 import com.example.rmesaage.utils.server_utils;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public class Register extends AppCompatActivity {
     private EditText username,password;
     @Override
@@ -28,7 +30,20 @@ public class Register extends AppCompatActivity {
             public void onClick(View view) {
                 String usernameString = username.getText().toString(),
                 passwordString = password.getText().toString();
-                if (server_utils.reg(usernameString,passwordString)){
+                AtomicBoolean bool = new AtomicBoolean();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        bool.set(server_utils.reg(usernameString,passwordString));
+                    }
+                });
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                if (bool.get()){
                     Intent intent = new Intent(Register.this, Chatlst.class);
                     intent.putExtra("author",usernameString);
                     SharedPreferences preferences = getSharedPreferences("myPrefs",MODE_PRIVATE);

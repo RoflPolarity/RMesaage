@@ -16,66 +16,62 @@ import java.util.Set;
 
 public class databaseUtils{
     private static final String TABLE_NAME = "messages";
-    private SQLiteDatabase database;
+    private static SQLiteDatabase database;
 
 
 
-
-    public databaseUtils(Context context) {
-        database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
-        System.out.println("connected to database");
-        createTableIfNotExists();
+    public static void init(Context context){
+                database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
+                createTableIfNotExists();
     }
 
-    public void createTableIfNotExists() {
+    private static void createTableIfNotExists() {
+        database.beginTransaction();
         String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME +
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT, author TEXT, sendTo TEXT, text TEXT)";
         database.execSQL(createTableQuery);
+        database.setTransactionSuccessful();
+        database.endTransaction();
     }
 
 
-    public ArrayList<ChatLstItem> getChats(String author) {
+    public static ArrayList<ChatLstItem> getChats(String author) {
         ArrayList<ChatLstItem> chats = new ArrayList<>();
-        Set<String> sendTo = new HashSet<>();
-        String selection = "author=?";
-        String[] selectionArgs = new String[]{author};
+            Set<String> sendTo = new HashSet<>();
+            String selection = "author=?";
+            String[] selectionArgs = new String[]{author};
+            database.beginTransaction();
+            Cursor cursor = database.query(TABLE_NAME, null, selection, selectionArgs, null, null, null);
+            int columnIndexSendTo = cursor.getColumnIndex("sendTo");
+            while (cursor.moveToNext()) {
+                String sendToValue = cursor.getString(columnIndexSendTo);
+                if (sendToValue != null) {
+                    sendTo.add(sendToValue);
+                }
+            }
 
-        Cursor cursor = database.query(TABLE_NAME,null,selection,selectionArgs,null,null,null);
-        int columnIndexSendTo = cursor.getColumnIndex("sendTo");
-        while (cursor.moveToNext()) {
-            String sendToValue = cursor.getString(columnIndexSendTo);
-            if (sendToValue != null) {
-                sendTo.add(sendToValue);
+            for (String recipient : sendTo) {
+                ArrayList<Message> msList = getMsList(author, recipient);
+                if (!msList.isEmpty()) {
+                    Message lastMessage = msList.get(msList.size() - 1);
+                    chats.add(new ChatLstItem(lastMessage.getText(), recipient));
+                }
             }
-        }
-        cursor.close();
-        for (String recipient : sendTo) {
-            ArrayList<Message> msList = getMsList(author, recipient);
-            if (!msList.isEmpty()) {
-                Message lastMessage = msList.get(msList.size() - 1);
-                chats.add(new ChatLstItem(lastMessage.getText(), recipient));
-            }
-        }
-        return chats;
+            database.setTransactionSuccessful();
+            database.endTransaction();
+            return chats;
     }
 
-    public ArrayList<Message> getMsList(String author, String sendTo) {
+    public static ArrayList<Message> getMsList(String author, String sendTo) {
+        database.beginTransaction();
         ArrayList<Message> msList = new ArrayList<>();
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                String selection = "author=? AND sendTo=?";
-                String[] selectionArgs = new String[]{author, sendTo};
-
+                String selection = "(author=? AND sendTo=?) OR (author=? AND sendTo=?)";
+                String[] selectionArgs = new String[]{author, sendTo, sendTo, author};
                 Cursor cursor = database.query("messages", null, selection, selectionArgs, null, null, null);
                 int columnIndexId = cursor.getColumnIndex("id");
                 int columnIndexAuthor = cursor.getColumnIndex("author");
                 int columnIndexSendTo = cursor.getColumnIndex("sendTo");
                 int columnIndexText = cursor.getColumnIndex("text");
-
-                if (columnIndexId == -1 || columnIndexAuthor == -1 || columnIndexSendTo == -1 || columnIndexText == -1) {
-                    cursor.close();
-                }
 
                 while (cursor.moveToNext()) {
                     try {
@@ -89,22 +85,20 @@ public class databaseUtils{
                     }
                 }
                 cursor.close();
-
-            }
-        });
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            throw new RuntimeException(e);
-        }
+        database.setTransactionSuccessful();
+        database.endTransaction();
         return msList;
     }
-    public void insert(Message message) {
+    public static void insert(Message message) {
+
+        System.out.println(message.getMessageUser());
         ContentValues values = new ContentValues();
         values.put("author", message.getMessageUser());
         values.put("sendTo", message.getSendTo());
         values.put("text", message.getText());
+        database.beginTransaction();
         database.insert(TABLE_NAME, null, values);
+        database.setTransactionSuccessful();
+        database.endTransaction();
     }
 }

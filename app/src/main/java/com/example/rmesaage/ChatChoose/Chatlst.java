@@ -18,35 +18,49 @@ import com.example.rmesaage.utils.server_utils;
 import java.util.ArrayList;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 
 public class Chatlst extends AppCompatActivity {
     private ChatAdapter chatAdapter;
 
     String username;
-    databaseUtils databaseUtils;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         Intent intent = getIntent();
+        server_utils.getNewMessageThread();
         username = intent.getStringExtra("author");
         chatAdapter = new ChatAdapter(new ArrayList<>());
         RecyclerView view = findViewById(R.id.recyclerview_chats);
         view.setAdapter(chatAdapter);
         SearchView searchView = findViewById(R.id.search_view);
         Timer timer = new Timer();
-        databaseUtils = new databaseUtils(getApplicationContext());
         synch();
+
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
             public boolean onQueryTextSubmit(String query) {
-                if (server_utils.searchByUsername(query)){
-                    chatAdapter.bind(query,"");
+                AtomicBoolean bool = new AtomicBoolean();
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        bool.set(server_utils.searchByUsername(query));
+                    }
+                });
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+                if (bool.get()) {
+                    chatAdapter.bind(query, "");
                     return true;
                 }
-                return false;
+            return false;
             }
 
             @Override
@@ -77,7 +91,7 @@ public class Chatlst extends AppCompatActivity {
                     }
                 });
             }
-        },0,150);
+        },0,750);
     }
     public void synch(){
         ImageButton btnSynch = findViewById(R.id.sychronize);

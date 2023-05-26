@@ -20,6 +20,10 @@ public class server_utils{
     private static ObjectOutputStream out;
     private static ObjectInputStream OIS;
     private static Socket socket;
+    private static boolean isSyncing;
+    public static ObjectInputStream getOIS() {
+        return OIS;
+    }
 
     public static void initializeStreams() {
         Thread th = new Thread(new Runnable() {
@@ -27,15 +31,12 @@ public class server_utils{
             public void run() {
                 try {
                     Socket socket = new Socket(SERVER_IP, 2511);
-                    OutputStream outputStream = socket.getOutputStream();
-                    ObjectOutputStream out = new ObjectOutputStream(outputStream);
-
                     InputStream inputStream = socket.getInputStream();
-                    ObjectInputStream in = new ObjectInputStream(inputStream);
-
+                    OIS = new ObjectInputStream(inputStream);
+                    OutputStream outputStream = socket.getOutputStream();
+                    out = new ObjectOutputStream(outputStream);
                     server_utils.socket = socket;
-                    server_utils.out = out;
-                    server_utils.OIS = in;
+                    server_utils.isSyncing = false;
                 } catch (IOException e) {
                     throw new RuntimeException(e);
                 }
@@ -48,6 +49,8 @@ public class server_utils{
             throw new RuntimeException(e);
         }
     }
+
+
     public static boolean auth(String username,String password){
         AtomicBoolean res = new AtomicBoolean();
                 try{
@@ -64,24 +67,44 @@ public class server_utils{
     public static boolean sendMessage(Message messages, Context context){
             AtomicBoolean res = new AtomicBoolean();
             try {
-                Response<?> response = new Response<>("SendMessage", messages.getMessageUser(), null, messages.getSendTo(), messages, "user");
+                Response<?> response = new Response<>("SendMessage", messages.getMessageUser(), null, messages.getSendTo(), messages.getText(), "user");
                 out.writeObject(response);
                 out.flush();
-                response = (Response<?>) OIS.readObject();
-                if (((ArrayList<Message>) response.getData()).size()>0){
-                   ArrayList<Message> lst = ((ArrayList<Message>) response.getData());
-                    res.set(true);
-                   databaseUtils utils = new databaseUtils(context);
-                    for (int i = 0; i < lst.size(); i++) {
-                        utils.insert(lst.get(i));
-                    }
-                }
+                databaseUtils.insert(messages);
             } catch (Exception e) {
                 e.printStackTrace();
                 res.set(false);
             }
             return res.get();
     }
+    public static void getNewMessageThread() {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    while (true) {
+                        // Проверяем флаг isSyncing для определения, нужно ли читать объекты
+                        if (isSyncing) {
+                            System.out.println("Читаю");
+                            Object object = OIS.readObject();
+                            if (object instanceof Response) {
+                                Response<?> response = (Response<?>) object;
+                                if ("NewMessage".equals(response.getComma())) {
+                                    System.out.println(response.getComma() + " Comma");
+                                    databaseUtils.insert(new Message(0, response.getUsername(), (String) response.getData(), null, response.getSendTo()));
+                                }
+                            }
+                        }
+                    }
+                } catch (ClassNotFoundException | IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.setName("NewMessages");
+        thread.start();
+    }
+
     public static boolean reg(String username,String password){
 
         AtomicBoolean res = new AtomicBoolean();
@@ -109,17 +132,26 @@ public class server_utils{
                 }
         return res.get();
     }
-    public static ArrayList<Message> sync(String username){
-        try{
-            Response<?> response = new Response<>("Sync",username,null,null,null,"user");
+    public static ArrayList<Message> sync(String username) {
+        try {
+            isSyncing = false; // Устанавливаем флаг, чтобы поток не читал объекты
+
+            Response<?> response = new Response<>("Sync", username, null, null, null, "user");
             out.writeObject(response);
             out.flush();
-            response = (Response<?>) OIS.readObject();
-            ArrayList<Message> res = (ArrayList<Message>) response.getData();
-            return res;
-        }catch (Exception e){
+
+            Object object = OIS.readObject();
+            if (object instanceof Response<?>) {
+                response = (Response<?>) object;
+                ArrayList<Message> res = (ArrayList<Message>) response.getData();
+                return res;
+            }
+        } catch (Exception e) {
             e.printStackTrace();
+        } finally {
+            isSyncing = true; // Снимаем приостановку чтения объектов
         }
         return null;
     }
+
 }

@@ -12,6 +12,7 @@ import android.widget.Toast;
 import androidx.appcompat.app.AppCompatActivity;
 
 import com.example.rmesaage.ChatChoose.Chatlst;
+import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
 public class Auth extends AppCompatActivity {
@@ -22,6 +23,9 @@ public class Auth extends AppCompatActivity {
         setContentView(R.layout.activity_auth);
         SharedPreferences preferences = getSharedPreferences("myPrefs",MODE_PRIVATE);
         server_utils.initializeStreams();
+        databaseUtils.init(getApplicationContext());
+
+
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
