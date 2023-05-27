@@ -34,14 +34,22 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
     @NonNull
     @Override
     public ChatViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message, parent, false);
+        LayoutInflater inflater = LayoutInflater.from(parent.getContext());
+        View view;
+        if (viewType == 0) {
+            // Инфлейт макета для сообщения
+            view = inflater.inflate(R.layout.item_message, parent, false);
+        } else {
+            // Инфлейт макета для изображения
+            view = inflater.inflate(R.layout.item_message, parent, false);
+        }
         return new ChatViewHolder(view);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ChatViewHolder holder, int position) {
         Message message = messageList.get(position);
-        holder.bind(message);
+        holder.bind(message, position);
     }
 
     @Override
@@ -49,54 +57,63 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         return messageList.size();
     }
 
+    @Override
+    public int getItemViewType(int position) {
+        Message message = messageList.get(position);
+        if (message.getBitMaps() != null) {
+            // Тип элемента - изображение
+            return 1;
+        } else {
+            // Тип элемента - сообщение
+            return 0;
+        }
+    }
+
     public class ChatViewHolder extends RecyclerView.ViewHolder {
         private TextView textViewMessage;
         private RecyclerView recyclerView;
-
 
         public ChatViewHolder(@NonNull View itemView) {
             super(itemView);
             textViewMessage = itemView.findViewById(R.id.text_view_message);
             recyclerView = itemView.findViewById(R.id.rv_media_list);
-
         }
 
-        public void bind(Message message) {
-            if (message.getBitMaps()!=null){
+        public void bind(Message message, int position) {
+            if (message.getBitMaps() != null) {
                 textViewMessage.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.VISIBLE);
                 List<Bitmap> medias = new ArrayList<>();
-                int[]scale;
+                int[] scale;
                 for (int i = 0; i < message.getBitMaps().size(); i++) {
-                    medias.add(BitmapFactory.decodeByteArray(message.getBitMaps().get(i),0,message.getBitMaps().get(i).length));
+                    medias.add(BitmapFactory.decodeByteArray(message.getBitMaps().get(i), 0, message.getBitMaps().get(i).length));
                 }
-                if (message.getBitMaps().size()==1){
+                if (message.getBitMaps().size() == 1) {
                     GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 1);
                     recyclerView.setLayoutManager(layoutManager);
                     scale = new int[]{900, 700};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias,scale);
+                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
                     recyclerView.setAdapter(mediaAdapter);
-                }else if (message.getBitMaps().size()>=2 && message.getBitMaps().size()<4){
+                } else if (message.getBitMaps().size() >= 2 && message.getBitMaps().size() < 4) {
                     GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 2);
                     recyclerView.setLayoutManager(layoutManager);
-                    scale = new int[]{800,700};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias,scale);
+                    scale = new int[]{800, 700};
+                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
                     recyclerView.setAdapter(mediaAdapter);
-                } else if (message.getBitMaps().size()>=4 && message.getBitMaps().size()<6) {
+                } else if (message.getBitMaps().size() >= 4 && message.getBitMaps().size() < 6) {
                     GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 3);
                     recyclerView.setLayoutManager(layoutManager);
                     scale = new int[]{700, 600};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias,scale);
+                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
                     recyclerView.setAdapter(mediaAdapter);
-                }else{
+                } else {
                     GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 4);
                     recyclerView.setLayoutManager(layoutManager);
-                    scale = new int[]{600,500};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias,scale);
+                    scale = new int[]{600, 500};
+                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
                     recyclerView.setAdapter(mediaAdapter);
                 }
-
-            }else {
+            } else {
                 textViewMessage.setVisibility(View.VISIBLE);
                 textViewMessage.setText(message.getText());
                 if (message.getMessageUser().equals(currentUser)) {
@@ -112,15 +129,14 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         }
     }
 
-
-    public boolean updateDialog(ArrayList<Message> messages){
+    public boolean updateDialog(ArrayList<Message> messages) {
         messageList.clear();
-        this.messageList = messages;
+        messageList.addAll(messages);
         notifyDataSetChanged();
         return true;
     }
 
-    public boolean insert(Message message){
+    public boolean insert(Message message) {
         messageList.add(message);
         notifyDataSetChanged();
         return true;

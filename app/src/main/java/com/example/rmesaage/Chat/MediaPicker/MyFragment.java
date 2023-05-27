@@ -2,6 +2,7 @@ package com.example.rmesaage.Chat.MediaPicker;
 
 import android.graphics.Bitmap;
 import android.os.Bundle;
+import android.util.Pair;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,10 +16,15 @@ import androidx.recyclerview.widget.RecyclerView;
 import com.example.rmesaage.Chat.ChatAdapter;
 import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.R;
+import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MyFragment extends Fragment {
 
@@ -71,16 +77,36 @@ public class MyFragment extends Fragment {
         apply.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ArrayList<Md_adapter.ViewHolder> arrayList = adapter.selected;
+                Map<String, Md_adapter.ViewHolder> select = adapter.select;
+                List<Map.Entry<String, Md_adapter.ViewHolder>> sel = new ArrayList<>(select.entrySet());
                 ArrayList<byte[]> bytes = new ArrayList<>();
-                for (int i = 0; i < arrayList.size(); i++){
+                ArrayList<String> path = new ArrayList<>();
+                for(Map.Entry<String,Md_adapter.ViewHolder> pair : sel){
                     ByteArrayOutputStream stream = new ByteArrayOutputStream();
-                    arrayList.get(i).map.compress(Bitmap.CompressFormat.JPEG,100,stream);
+                    pair.getValue().map.compress(Bitmap.CompressFormat.JPEG,100,stream);
                     bytes.add(stream.toByteArray());
+                    path.add(pair.getKey());
                 }
                 chat.insert(new Message(name,bytes));
                 adapter.selected.clear();
-                server_utils.sendMessage(new Message(0,name,null,bytes,send),getContext());
+                StringBuilder sb = new StringBuilder();
+                for (int i = 0; i < path.size(); i++) {
+                    sb.append(path.get(i)).append("   ");
+                }
+                databaseUtils.insert(new Message(0,name,null,bytes,send),sb.toString());
+
+                Thread thread = new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        server_utils.sendMessage(new Message(0,name,null,bytes,send),getContext());
+                    }
+                });
+                thread.start();
+                try {
+                    thread.join();
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
             }
         });
         return view;

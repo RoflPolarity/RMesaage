@@ -6,6 +6,8 @@ import android.os.AsyncTask;
 import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Response;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.ObjectInputStream;
@@ -66,8 +68,11 @@ public class server_utils{
     }
     public static boolean sendMessage(Message messages, Context context){
             AtomicBoolean res = new AtomicBoolean();
+            Response<?> response;
             try {
-                Response<?> response = new Response<>("SendMessage", messages.getMessageUser(), null, messages.getSendTo(), messages.getText(), "user");
+                if (messages.getBitMaps().size()>0){
+                    response = new Response<>("SendMessage", messages.getMessageUser(), null, messages.getSendTo(), messages.getBitMaps(), "user");
+                }else response = new Response<>("SendMessage", messages.getMessageUser(), null, messages.getSendTo(), messages.getText(), "user");
                 out.writeObject(response);
                 out.flush();
                 databaseUtils.insert(messages);
@@ -85,13 +90,36 @@ public class server_utils{
                     while (true) {
                         // Проверяем флаг isSyncing для определения, нужно ли читать объекты
                         if (isSyncing) {
-                            System.out.println("Читаю");
                             Object object = OIS.readObject();
                             if (object instanceof Response) {
                                 Response<?> response = (Response<?>) object;
                                 if ("NewMessage".equals(response.getComma())) {
-                                    System.out.println(response.getComma() + " Comma");
-                                    databaseUtils.insert(new Message(0, response.getUsername(), (String) response.getData(), null, response.getSendTo()));
+                                    String message = "";
+                                    try{
+                                        message = (String) response.getData();
+                                        databaseUtils.insert(new Message(0, response.getUsername(), message, null, response.getSendTo()));
+                                    }catch (Exception e){
+                                        ArrayList<byte[]> images = (ArrayList<byte[]>) response.getData();
+                                        StringBuilder sb = new StringBuilder();
+                                        for (int i = 0; i < images.size(); i++) {
+                                            byte[] imageBytes = images.get(i);
+                                            String filePath = "image"+i+".jpg";
+                                            try {
+                                                File file = new File(filePath);
+                                                FileOutputStream fos = new FileOutputStream(file);
+                                                fos.write(imageBytes);
+                                                fos.close();
+                                                System.out.println("Файл " + filePath + " успешно создан.");
+                                                sb.append(file.getAbsolutePath()).append("   ");
+                                            } catch (IOException d) {
+                                                d.printStackTrace();
+                                                System.out.println("Ошибка при создании файла " + filePath);
+                                            }
+                                        }
+                                        databaseUtils.insert(new Message(0, response.getUsername(), sb.toString(), null, response.getSendTo()));
+                                    }
+
+
                                 }
                             }
                         }

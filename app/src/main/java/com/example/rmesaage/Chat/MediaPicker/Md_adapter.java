@@ -17,7 +17,9 @@ import com.squareup.picasso.Picasso;
 import java.io.File;
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class Md_adapter extends RecyclerView.Adapter<Md_adapter.ViewHolder> implements Serializable {
 
@@ -25,6 +27,7 @@ public class Md_adapter extends RecyclerView.Adapter<Md_adapter.ViewHolder> impl
     private Context context;
     public ArrayList<ViewHolder> selected = new ArrayList<>();
 
+    public Map<String,ViewHolder> select = new HashMap<>();
     public Md_adapter(List<String> dataList, Context context) {
         this.dataList = dataList;
         this.context = context;
@@ -52,6 +55,7 @@ public class Md_adapter extends RecyclerView.Adapter<Md_adapter.ViewHolder> impl
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                select.put(path,holder);
                 selected.add(holder);
             }
         });

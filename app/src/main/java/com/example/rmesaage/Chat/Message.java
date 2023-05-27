@@ -38,4 +38,24 @@ public class Message implements Serializable {
     public String getMessageUser() {return messageUser;}
     public String getText() {return text;}
     public ArrayList<byte[]> getBitMaps() {return bitMaps;}
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setMessageUser(String messageUser) {
+        this.messageUser = messageUser;
+    }
+
+    public void setText(String text) {
+        this.text = text;
+    }
+
+    public void setBitMaps(ArrayList<byte[]> bitMaps) {
+        this.bitMaps = bitMaps;
+    }
+
+    public void setSendTo(String sendTo) {
+        this.sendTo = sendTo;
+    }
 }
