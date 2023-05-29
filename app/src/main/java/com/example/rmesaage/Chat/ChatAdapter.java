@@ -14,6 +14,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.R;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -129,16 +131,9 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         }
     }
 
-    public boolean updateDialog(ArrayList<Message> messages) {
-        messageList.clear();
-        messageList.addAll(messages);
-        notifyDataSetChanged();
+    public boolean insert(Message message) {
+        messageList.add(message);
         return true;
     }
 
-    public boolean insert(Message message) {
-        messageList.add(message);
-        notifyDataSetChanged();
-        return true;
-    }
 }

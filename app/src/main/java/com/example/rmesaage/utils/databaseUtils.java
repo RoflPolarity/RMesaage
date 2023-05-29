@@ -10,6 +10,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
 import com.example.rmesaage.Chat.Message;
+import com.example.rmesaage.Chat.UserChat;
 import com.example.rmesaage.ChatChoose.ChatLstItem;
 
 import java.io.ByteArrayOutputStream;
@@ -23,33 +24,34 @@ import java.util.Set;
 
 public class databaseUtils{
     private static final String TABLE_NAME = "messages";
-    private static SQLiteDatabase database;
 
+    static UserChat Userchat;
 
-
-    public static void init(Context context){
-                database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
-                createTableIfNotExists();
+    public static void setChat(UserChat chat){
+        Userchat = chat;
     }
 
-    private static void createTableIfNotExists() {
+    public static void createTableIfNotExists(Context context) {
+        SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
         database.beginTransaction();
         String createTableQuery = "CREATE TABLE IF NOT EXISTS " + TABLE_NAME +
                 "(id INTEGER PRIMARY KEY AUTOINCREMENT, author TEXT, sendTo TEXT, text TEXT)";
         database.execSQL(createTableQuery);
         database.setTransactionSuccessful();
         database.endTransaction();
+        database.close();
     }
 
 
-    public static ArrayList<ChatLstItem> getChats(String author) {
+    public static ArrayList<ChatLstItem> getChats(String author, Context context) {
         ArrayList<ChatLstItem> chats = new ArrayList<>();
             Set<String> sendTo = new HashSet<>();
             String selection = "author=?";
             String[] selectionArgs = new String[]{author};
-        System.out.println(database);
+            SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
             database.beginTransaction();
             Cursor cursor = database.query(TABLE_NAME, null, selection, selectionArgs, null, null, null);
+
             int columnIndexSendTo = cursor.getColumnIndex("sendTo");
             while (cursor.moveToNext()) {
                 String sendToValue = cursor.getString(columnIndexSendTo);
@@ -57,25 +59,29 @@ public class databaseUtils{
                     sendTo.add(sendToValue);
                 }
             }
-
+            cursor.close();
+            database.setTransactionSuccessful();
+            database.endTransaction();
+            database.close();
             for (String recipient : sendTo) {
-                ArrayList<Message> msList = getMsList(author, recipient);
+                ArrayList<Message> msList = getMsList(author, recipient,context);
                 if (!msList.isEmpty()) {
                     Message lastMessage = msList.get(msList.size() - 1);
                     chats.add(new ChatLstItem(lastMessage.getText(), recipient));
                 }
             }
-            database.setTransactionSuccessful();
-            database.endTransaction();
+
             return chats;
     }
 
-    public static ArrayList<Message> getMsList(String author, String sendTo) {
-        database.beginTransaction();
+    public static ArrayList<Message> getMsList(String author, String sendTo,Context context) {
+        SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
         ArrayList<Message> msList = new ArrayList<>();
-                String selection = "(author=? AND sendTo=?) OR (author=? AND sendTo=?)";
-                String[] selectionArgs = new String[]{author, sendTo, sendTo, author};
-                Cursor cursor = database.query("messages", null, selection, selectionArgs, null, null, null);
+        String selection = "(author=? AND sendTo=?) OR (author=? AND sendTo=?)";
+        String[] selectionArgs = new String[]{author, sendTo, sendTo, author};
+        database.beginTransaction();
+        Cursor cursor = database.query("messages", null, selection, selectionArgs, null, null, null);
+
                 int columnIndexId = cursor.getColumnIndex("id");
                 int columnIndexAuthor = cursor.getColumnIndex("author");
                 int columnIndexSendTo = cursor.getColumnIndex("sendTo");
@@ -87,6 +93,7 @@ public class databaseUtils{
                         String sender = cursor.getString(columnIndexAuthor);
                         String recipient = cursor.getString(columnIndexSendTo);
                         String text = cursor.getString(columnIndexText);
+                        if (text!=null){
                         if (text.contains("Image---")){
                             text = text.replace("Image---","");
                             ArrayList<byte[]> bitMaps = new ArrayList<>();
@@ -111,7 +118,8 @@ public class databaseUtils{
                                 }
                             }
                             msList.add(new Message(id, sender, null, bitMaps, recipient));
-                        }else msList.add(new Message(id, sender, text, null, recipient));
+                            }else msList.add(new Message(id, sender, text, null, recipient));
+                        }
                     } catch (SQLiteException e) {
                         e.printStackTrace();
                     }
@@ -119,21 +127,40 @@ public class databaseUtils{
                 cursor.close();
         database.setTransactionSuccessful();
         database.endTransaction();
+        database.close();
         return msList;
     }
-    public static void insert(Message message) {
-        if (message.getText().equals("")) return;
-        ContentValues values = new ContentValues();
-        values.put("author", message.getMessageUser());
-        values.put("sendTo", message.getSendTo());
-        values.put("text", message.getText());
-        database.beginTransaction();
-        database.insert(TABLE_NAME, null, values);
-        database.setTransactionSuccessful();
-        database.endTransaction();
+    public static void insert(Message message, Context context) {
+        if (message.getText().contains("NewMessage---")){
+            message.setText(message.getText().replace("NewMessage---",""));
+            SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
+            ContentValues values = new ContentValues();
+            values.put("author", message.getMessageUser());
+            values.put("sendTo", message.getSendTo());
+            values.put("text", message.getText());
+            database.beginTransaction();
+            database.insert(TABLE_NAME, null, values);
+            database.setTransactionSuccessful();
+            database.endTransaction();
+            database.close();
+            Userchat.OnNewMessageRec(message);
+        }else {
+            SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
+            ContentValues values = new ContentValues();
+            values.put("author", message.getMessageUser());
+            values.put("sendTo", message.getSendTo());
+            values.put("text", message.getText());
+            database.beginTransaction();
+            database.insert(TABLE_NAME, null, values);
+            database.setTransactionSuccessful();
+            database.endTransaction();
+            database.close();
+        }
+
+
     }
-    public static void insert(Message message,String path) {
-        System.out.println("Вставка");
+    public static void insert(Message message,String path, Context context) {
+        SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
         if (message.getBitMaps().size()>0 && !path.equals("")){
             ContentValues values = new ContentValues();
             values.put("author", message.getMessageUser());
@@ -143,6 +170,8 @@ public class databaseUtils{
             database.insert(TABLE_NAME, null, values);
             database.setTransactionSuccessful();
             database.endTransaction();
+
         }
+        database.close();
     }
 }

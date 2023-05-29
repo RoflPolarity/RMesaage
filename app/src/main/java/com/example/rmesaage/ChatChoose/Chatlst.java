@@ -23,6 +23,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 public class Chatlst extends AppCompatActivity {
     private ChatAdapter chatAdapter;
+    private boolean update = true;
+    Timer timer = new Timer();
 
     String username;
 
@@ -31,13 +33,12 @@ public class Chatlst extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
         Intent intent = getIntent();
-        server_utils.getNewMessageThread();
+        server_utils.getNewMessageThread(getApplicationContext());
         username = intent.getStringExtra("author");
         chatAdapter = new ChatAdapter(new ArrayList<>());
         RecyclerView view = findViewById(R.id.recyclerview_chats);
         view.setAdapter(chatAdapter);
         SearchView searchView = findViewById(R.id.search_view);
-        Timer timer = new Timer();
         synch();
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
@@ -47,6 +48,7 @@ public class Chatlst extends AppCompatActivity {
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
+                        update = false;
                         bool.set(server_utils.searchByUsername(query));
                     }
                 });
@@ -84,15 +86,28 @@ public class Chatlst extends AppCompatActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        ArrayList<ChatLstItem> messages = databaseUtils.getChats(username);
-                        chatAdapter.chatList.clear();
-                        chatAdapter.chatList.addAll(messages);
-                        chatAdapter.notifyDataSetChanged();
+                        if (searchView.getQuery().toString().equals("")) update = true;
+                        if (update) {
+                            ArrayList<ChatLstItem> messages = databaseUtils.getChats(username, getApplicationContext());
+                            chatAdapter.chatList.clear();
+                            chatAdapter.chatList.addAll(messages);
+                            chatAdapter.notifyDataSetChanged();
+                        }
                     }
                 });
             }
-        },0,750);
+        },0,1500);
     }
+
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        timer.cancel();
+    }
+
+
+
     public void synch(){
         ImageButton btnSynch = findViewById(R.id.sychronize);
         btnSynch.setOnClickListener(new View.OnClickListener() {
@@ -104,7 +119,7 @@ public class Chatlst extends AppCompatActivity {
                         ArrayList<Message> res = server_utils.sync(username);
                         if (res != null){
                         for (int i = 0; i < res.size(); i++) {
-                            databaseUtils.insert(res.get(i));
+                            databaseUtils.insert(res.get(i),getApplicationContext());
 
                             }
                         }

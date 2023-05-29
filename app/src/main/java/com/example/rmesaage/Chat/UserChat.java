@@ -6,10 +6,13 @@ import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.provider.MediaStore;
+import android.util.Log;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -25,14 +28,27 @@ import com.example.rmesaage.R;
 import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
+
 
 public class UserChat extends AppCompatActivity {
     private static final int REQUEST_EXTERNAL_STORAGE = 1;
     ChatAdapter chatAdapter;
+
+    public void OnNewMessageRec(Message message){
+        chatAdapter.insert(message);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                chatAdapter.notifyItemInserted(chatAdapter.getItemCount());
+            }
+        });
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -41,25 +57,25 @@ public class UserChat extends AppCompatActivity {
         Intent intent = getIntent();
         String username = intent.getStringExtra("username");
         String sendTo = intent.getStringExtra("SendTo");
-        ArrayList<Message> messages = databaseUtils.getMsList(username,sendTo);
+        ArrayList<Message> messages = databaseUtils.getMsList(username,sendTo,getApplicationContext());
         TextView name = findViewById(R.id.ChatName);
         name.setText(sendTo);
 
 
+
+        Md_adapter adapter = new Md_adapter(getAllMedia(25),getApplicationContext());
         chatAdapter = new ChatAdapter(messages,username);
         RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
         recyclerView.setAdapter(chatAdapter);
-
-        Md_adapter adapter = new Md_adapter(getAllMedia(),getApplicationContext());
         verifyStoragePermissions();
         FrameLayout frameLayout = findViewById(R.id.fragment_container);
-        MyFragment fragment = MyFragment.newInstance(adapter,frameLayout,chatAdapter,username,sendTo);
+        MyFragment fragment = MyFragment.newInstance(adapter,frameLayout,chatAdapter,username,sendTo,this);
         FragmentManager fragmentManager = getSupportFragmentManager();
         FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();
         fragmentTransaction.add(R.id.fragment_container, fragment);
         fragmentTransaction.addToBackStack(null);
         fragmentTransaction.commit();
-
+        databaseUtils.setChat(this);
         EditText editText = findViewById(R.id.edit_text_message);
         editText.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -80,6 +96,12 @@ public class UserChat extends AppCompatActivity {
                 EditText editText = findViewById(R.id.edit_text_message);
                 Message message = new Message(chatAdapter.getItemCount()+1,username,editText.getText().toString(),null,sendTo);
                 chatAdapter.insert(message);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        chatAdapter.notifyItemInserted(chatAdapter.getItemCount());
+                    }
+                });
                 Thread thread = new Thread(new Runnable() {
                     @Override
                     public void run() {
@@ -95,38 +117,16 @@ public class UserChat extends AppCompatActivity {
                 editText.setText("");
             }
         });
-
-        Timer timer = new Timer();
-        timer.schedule(new TimerTask() {
-            @Override
-            public void run() {
-                runOnUiThread(new Runnable() {
-                    @Override
-                    public void run() {
-                        chatAdapter.updateDialog(databaseUtils.getMsList(username,sendTo));
-                    }
-                });
-            }
-        },0,10000);
-
         ImageButton attach = findViewById(R.id.attach);
-        final boolean[] visible = {false};
         attach.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (!visible[0]) {
-                    frameLayout.setVisibility(View.VISIBLE);
-                    visible[0] = true;
-                }else{
-                    frameLayout.setVisibility(View.GONE);
-                    visible[0] = false;
-                }
             }
         });
 
     }
 
-    public List<String> getAllMedia() {
+    public List<String> getAllMedia(int count) {
         List<String> mediaList = new ArrayList<>();
         String[] projection = {MediaStore.Images.Media.DATA};
         String sortOrder = MediaStore.Images.Media.DATE_ADDED + " DESC";
@@ -134,17 +134,19 @@ public class UserChat extends AppCompatActivity {
                 projection, null, null, sortOrder)) {
             if (cursor != null) {
                 int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                while (cursor.moveToNext()) {
+                int i = 0;
+                while (cursor.moveToNext() && i < count) {
                     String path = cursor.getString(columnIndex);
                     mediaList.add(path);
+                    i++;
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
         return mediaList;
-    }
 
+    }
 
     private void verifyStoragePermissions() {
         String[] permissions = {Manifest.permission.READ_EXTERNAL_STORAGE};
