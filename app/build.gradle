@@ -7,7 +7,7 @@ repositories {
 }
 
 dependencies{
-    implementation 'com.squareup.picasso:picasso:2.71828'
+    implementation 'com.squareup.picasso:picasso:2.8'
 }
 android {
     namespace 'com.example.rmesaage'
@@ -16,7 +16,7 @@ android {
     defaultConfig {
         applicationId "com.example.rmesaage"
         minSdk 26
-        targetSdk 33
+        targetSdk 32
         versionCode 1
         versionName "1.0"
 
