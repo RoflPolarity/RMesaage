@@ -2,6 +2,7 @@ package com.example.rmesaage.Chat;
 
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.provider.MediaStore;
 import android.view.View;
@@ -21,6 +22,13 @@ import com.example.rmesaage.R;
 import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -79,7 +87,7 @@ public class UserChat extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 EditText editText = findViewById(R.id.edit_text_message);
-                Message message = new Message(chatAdapter.getItemCount()+1,username,editText.getText().toString(),null,sendTo);
+                Message message = new Message(chatAdapter.getItemCount()+1,username,editText.getText().toString(),null,sendTo,null);
                 chatAdapter.insert(message);
                 runOnUiThread(new Runnable() {
                     @Override
@@ -112,10 +120,37 @@ public class UserChat extends AppCompatActivity {
                             Intent data = result.getData();
                             if (data != null) {
                                 // Получите выбранные изображения из интента и обработайте их
-                                byte[][] selectedImages = (byte[][]) data.getSerializableExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES);
-                                    if (selectedImages != null && selectedImages.length > 0) {
-                                        ArrayList<byte[]> res = new ArrayList<>(Arrays.asList(selectedImages));
-                                        server_utils.sendMessage(new Message(0,username,null,res,sendTo),getApplicationContext());
+                                    String path = data.getStringExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES);
+                                try {
+                                    BufferedReader br = new BufferedReader(new FileReader(new File(path)));
+                                    ArrayList<byte[]> res = new ArrayList<>();
+                                    ArrayList<String> paths = new ArrayList<>();
+                                    String line = "";
+                                    while ((line = br.readLine())!=null){
+                                        Uri imageUri = Uri.parse(line);
+                                        paths.add(line);
+                                        InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                                        byte[] buffer = new byte[1024];
+                                        int bytesRead;
+
+                                        while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                            byteArrayOutputStream.write(buffer, 0, bytesRead);
+                                        }
+                                        inputStream.close();
+                                        res.add(byteArrayOutputStream.toByteArray());
+                                    }
+                                    Thread thread = new Thread(new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            server_utils.sendMessage(new Message(0,username,null,res,sendTo, paths),getApplicationContext());
+                                        }
+                                    });
+                                    thread.start();
+                                    chatAdapter.insert(new Message(0,username,null,res,sendTo,paths));
+                                    chatAdapter.notifyItemInserted(chatAdapter.getItemCount());
+                                } catch (IOException e) {
+                                    throw new RuntimeException(e);
                                 }
                             }
                         }
@@ -131,28 +166,6 @@ public class UserChat extends AppCompatActivity {
                 imagePickerLauncher.launch(intent);
             }
         });
-
-    }
-
-    public List<String> getAllMedia(int count) {
-        List<String> mediaList = new ArrayList<>();
-        String[] projection = {MediaStore.Images.Media.DATA};
-        String sortOrder = MediaStore.Images.Media.DATE_ADDED + " DESC";
-        try (Cursor cursor = getContentResolver().query(MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                projection, null, null, sortOrder)) {
-            if (cursor != null) {
-                int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
-                int i = 0;
-                while (cursor.moveToNext() && i < count) {
-                    String path = cursor.getString(columnIndex);
-                    mediaList.add(path);
-                    i++;
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return mediaList;
 
     }
 }

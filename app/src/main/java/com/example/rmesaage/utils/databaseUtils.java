@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 
 import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Chat.UserChat;
@@ -17,6 +18,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -97,28 +99,22 @@ public class databaseUtils{
                         if (text.contains("Image---")){
                             text = text.replace("Image---","");
                             ArrayList<byte[]> bitMaps = new ArrayList<>();
+                            ArrayList<String> paths = new ArrayList<>();
                             String[] splittedText = text.split("   ");
                             for (int i = 0; i < splittedText.length; i++) {
-                                File file = new File(splittedText[i]);
-                                try {
-                                    FileInputStream fis = new FileInputStream(file);
-                                    ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                                Uri imageUri = Uri.parse(splittedText[i]);
+                                paths.add(String.valueOf(imageUri));
 
-                                    byte[] buffer = new byte[1024];
-                                    int bytesRead;
-                                    while ((bytesRead = fis.read(buffer)) != -1) {
-                                        bos.write(buffer, 0, bytesRead);
-                                    }
-                                    byte[] fileBytes = bos.toByteArray();
+                                try {
+                                    InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
+                                    byte[] fileBytes = getBytesFromInputStream(inputStream);
                                     bitMaps.add(fileBytes);
-                                    fis.close();
-                                    bos.close();
                                 } catch (IOException n) {
                                     n.printStackTrace();
                                 }
                             }
-                            msList.add(new Message(id, sender, null, bitMaps, recipient));
-                            }else msList.add(new Message(id, sender, text, null, recipient));
+                            msList.add(new Message(id, sender, null, bitMaps, recipient,paths));
+                            }else msList.add(new Message(id, sender, text, null, recipient,null));
                         }
                     } catch (SQLiteException e) {
                         e.printStackTrace();
@@ -130,48 +126,60 @@ public class databaseUtils{
         database.close();
         return msList;
     }
-    public static void insert(Message message, Context context) {
-        if (message.getText().contains("NewMessage---")){
-            message.setText(message.getText().replace("NewMessage---",""));
-            SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
-            ContentValues values = new ContentValues();
-            values.put("author", message.getMessageUser());
-            values.put("sendTo", message.getSendTo());
-            values.put("text", message.getText());
-            database.beginTransaction();
-            database.insert(TABLE_NAME, null, values);
-            database.setTransactionSuccessful();
-            database.endTransaction();
-            database.close();
-            Userchat.OnNewMessageRec(message);
-        }else {
-            SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
-            ContentValues values = new ContentValues();
-            values.put("author", message.getMessageUser());
-            values.put("sendTo", message.getSendTo());
-            values.put("text", message.getText());
-            database.beginTransaction();
-            database.insert(TABLE_NAME, null, values);
-            database.setTransactionSuccessful();
-            database.endTransaction();
-            database.close();
+
+    private static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
+        ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
+        int bufferSize = 1024;
+        byte[] buffer = new byte[bufferSize];
+        int len;
+        while ((len = inputStream.read(buffer)) != -1) {
+            byteBuffer.write(buffer, 0, len);
         }
-
-
+        return byteBuffer.toByteArray();
     }
-    public static void insert(Message message,String path, Context context) {
-        SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
-        if (message.getBitMaps().size()>0 && !path.equals("")){
+    public static void insert(Message message, Context context) {
+        if (message.getText()!=null) {
+            if (message.getText().contains("NewMessage---")) {
+                message.setText(message.getText().replace("NewMessage---", ""));
+                SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
+                ContentValues values = new ContentValues();
+                values.put("author", message.getMessageUser());
+                values.put("sendTo", message.getSendTo());
+                values.put("text", message.getText());
+                database.beginTransaction();
+                database.insert(TABLE_NAME, null, values);
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                database.close();
+                Userchat.OnNewMessageRec(message);
+            } else {
+                SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
+                ContentValues values = new ContentValues();
+                values.put("author", message.getMessageUser());
+                values.put("sendTo", message.getSendTo());
+                values.put("text", message.getText());
+                database.beginTransaction();
+                database.insert(TABLE_NAME, null, values);
+                database.setTransactionSuccessful();
+                database.endTransaction();
+                database.close();
+            }
+        }else if (message.getText()==null && message.getPaths()!=null){
+            SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
             ContentValues values = new ContentValues();
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < message.getPaths().size(); i++) {
+                sb.append(message.getPaths().get(i)).append("   ");
+            }
             values.put("author", message.getMessageUser());
             values.put("sendTo", message.getSendTo());
-            values.put("text", "Image---"+path);
+            values.put("text", "Image---"+sb);
             database.beginTransaction();
             database.insert(TABLE_NAME, null, values);
             database.setTransactionSuccessful();
             database.endTransaction();
-
+            database.close();
         }
-        database.close();
+
     }
 }

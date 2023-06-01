@@ -25,6 +25,7 @@ import androidx.core.content.ContextCompat;
 import com.example.rmesaage.Chat.UserChat;
 import com.example.rmesaage.R;
 
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -44,9 +45,10 @@ import java.util.Set;
 public class ImagePickerActivity extends AppCompatActivity {
 
     private static final int REQUEST_READ_EXTERNAL_STORAGE = 1;
+    private static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 1;
     public static final String EXTRA_SELECTED_IMAGES = "selected_images";
 
-    private HashSet<byte[]> selected = new HashSet<>();
+    private HashSet<Uri> selected = new HashSet<>();
 
     private ImageAdapter imageAdapter;
 
@@ -64,7 +66,7 @@ public class ImagePickerActivity extends AppCompatActivity {
             public void onClick(View v) {
                 // Создание множества выбранных изображений
                 Intent resultIntent = new Intent();
-                resultIntent.putExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES, selected.toArray(new byte[0][]));
+                resultIntent.putExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES, createTempImageFile(selected).toString());
                 setResult(RESULT_OK, resultIntent);
                 finish();
             }
@@ -91,8 +93,13 @@ public class ImagePickerActivity extends AppCompatActivity {
             // Разрешение уже предоставлено, загружаем изображения
             loadImages();
         }
-
-
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            // Разрешение не предоставлено, запросите его у пользователя
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
+                    REQUEST_CODE_WRITE_EXTERNAL_STORAGE);
+        }
 
 
 
@@ -103,30 +110,11 @@ public class ImagePickerActivity extends AppCompatActivity {
             public void onItemClick(AdapterView<?> adapterView, View view, int position, long id) {
                 ImageItem imageItem = imageAdapter.getItem(position);
                 Uri imageUri = Uri.parse(imageItem.getPath());
-
-                try {
-                    InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                    ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                    byte[] buffer = new byte[1024];
-                    int bytesRead;
-
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        byteArrayOutputStream.write(buffer, 0, bytesRead);
-                    }
-
-                    byte[] bytes = byteArrayOutputStream.toByteArray();
-
-                    if (selected.contains(bytes)) {
-                        selected.remove(bytes);
+                    if (selected.contains(imageUri)) {
+                        selected.remove(imageUri);
                     } else {
-                        selected.add(bytes);
+                        selected.add(imageUri);
                     }
-
-                    byteArrayOutputStream.close();
-                    inputStream.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
             }
 
         });
@@ -157,30 +145,42 @@ public class ImagePickerActivity extends AppCompatActivity {
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == REQUEST_READ_EXTERNAL_STORAGE) {
+
+        if (requestCode == REQUEST_READ_EXTERNAL_STORAGE || requestCode == REQUEST_CODE_WRITE_EXTERNAL_STORAGE) {
             if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                // Разрешение предоставлено, загружаем изображения
-                loadImages();
+                // Разрешение предоставлено, выполните необходимые действия
+
+                if (requestCode == REQUEST_READ_EXTERNAL_STORAGE) {
+                    // Разрешение на чтение внешнего хранилища предоставлено, загрузите изображения
+                    loadImages();
+                } else if (requestCode == REQUEST_CODE_WRITE_EXTERNAL_STORAGE) {
+                    // Разрешение на запись внешнего хранилища предоставлено, выполните соответствующие действия
+                    // например, запись во внешнее хранилище
+                }
             } else {
-                // Разрешение не предоставлено, закрываем активность
+                // Разрешение не предоставлено, обработайте эту ситуацию
                 finish();
             }
         }
     }
-    public Path createTempImageFile(byte[][] matrix){
-        File file = new File("Temp.txt");
+
+    public Path createTempImageFile(Set<Uri> select){
+        File file = new File("/data/data/com.example.rmesaage/files/Temp.txt");
         try {
             file.createNewFile();
             FileWriter fr = new FileWriter(file);
-            for (int i = 0; i < matrix.length; i++) {
-                fr.write("\tIMAGE\t");
-                fr.flush();
-                for (int j = 0; j < matrix[i].length; j++) {
-                    fr.write(matrix[i][j] + " ");
-                    fr.flush();
+            BufferedWriter br = new BufferedWriter(fr);
+            select.forEach(x->{
+                try {
+                    br.write(x.toString()+"\n");
+                    System.out.println(x);
+                    br.flush();
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
-            }
+            });
         } catch (IOException ignored) {
+            ignored.printStackTrace();
         }
         return Paths.get(file.getAbsolutePath());
     }

@@ -99,26 +99,26 @@ public class server_utils {
                                     String message = "";
                                     if (response.getData() instanceof String){
                                         message = (String) response.getData();
-                                    databaseUtils.insert(new Message(0, response.getUsername(), "NewMessage---" + message, null, response.getSendTo()), context);
+                                    databaseUtils.insert(new Message(0, response.getUsername(), "NewMessage---" + message, null, response.getSendTo(),null), context);
                                     } else if (response.getData() instanceof ArrayList) {
                                         ArrayList<byte[]> images = (ArrayList<byte[]>) response.getData();
-                                        StringBuilder sb = new StringBuilder();
+                                        ArrayList<String> paths = new ArrayList<>();
                                         for (int i = 0; i < images.size(); i++) {
                                             byte[] imageBytes = images.get(i);
                                             String filePath = "image" + i + ".jpg";
+                                            paths.add(filePath);
                                             try {
                                                 File file = new File(filePath);
                                                 FileOutputStream fos = new FileOutputStream(file);
                                                 fos.write(imageBytes);
                                                 fos.close();
                                                 System.out.println("Файл " + filePath + " успешно создан.");
-                                                sb.append(file.getAbsolutePath()).append("   ");
                                             } catch (IOException d) {
                                                 d.printStackTrace();
                                                 System.out.println("Ошибка при создании файла " + filePath);
                                             }
                                         }
-                                        databaseUtils.insert(new Message(0, response.getUsername(), sb.toString(), null, response.getSendTo()), context);
+                                        databaseUtils.insert(new Message(0, response.getUsername(), null, null, response.getSendTo(),paths), context);
                                     }
 
                                 }else if ("Sync".equals(response.getComma())) {
