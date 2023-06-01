@@ -107,7 +107,7 @@ public class server_utils {
 
                                         for (int i = 0; i < images.size(); i++) {
                                             byte[] imageBytes = images.get(i);
-                                            String filePath = "/data/data/com.example.rmesaage/files/image" + i + ".jpg";
+                                            String filePath = "/data/data/com.example.rmesaage/files/image" + images.hashCode() + ".jpg";
                                             paths.add(filePath);
                                             try {
                                                 File file = new File(filePath);
