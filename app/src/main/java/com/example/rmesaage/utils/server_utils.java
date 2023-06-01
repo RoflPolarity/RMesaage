@@ -103,9 +103,11 @@ public class server_utils {
                                     } else if (response.getData() instanceof ArrayList) {
                                         ArrayList<byte[]> images = (ArrayList<byte[]>) response.getData();
                                         ArrayList<String> paths = new ArrayList<>();
+                                        new File("/data/data/com.example.rmesaage/files").mkdir();
+
                                         for (int i = 0; i < images.size(); i++) {
                                             byte[] imageBytes = images.get(i);
-                                            String filePath = "image" + i + ".jpg";
+                                            String filePath = "/data/data/com.example.rmesaage/files/image" + i + ".jpg";
                                             paths.add(filePath);
                                             try {
                                                 File file = new File(filePath);
@@ -118,7 +120,7 @@ public class server_utils {
                                                 System.out.println("Ошибка при создании файла " + filePath);
                                             }
                                         }
-                                        databaseUtils.insert(new Message(0, response.getUsername(), null, null, response.getSendTo(),paths), context);
+                                        databaseUtils.insert(new Message(0, response.getUsername(), null, images, response.getSendTo(),paths), context);
                                     }
 
                                 }else if ("Sync".equals(response.getComma())) {

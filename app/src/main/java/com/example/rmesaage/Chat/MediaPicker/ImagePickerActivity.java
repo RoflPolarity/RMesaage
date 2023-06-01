@@ -182,17 +182,34 @@ public class ImagePickerActivity extends AppCompatActivity {
     public Path createTempImageFile(Set<Uri> select){
         File file = new File("/data/data/com.example.rmesaage/files/Temp.txt");
         try {
-            FileWriter fr = new FileWriter(file);
-            BufferedWriter br = new BufferedWriter(fr);
-            select.forEach(x->{
-                try {
-                    br.write(x.toString()+"\n");
-                    System.out.println(x);
-                    br.flush();
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
-            });
+            if (file.exists()) {
+
+                FileWriter fr = new FileWriter(file);
+                BufferedWriter br = new BufferedWriter(fr);
+                select.forEach(x -> {
+                    try {
+                        br.write(x.toString() + "\n");
+                        System.out.println(x);
+                        br.flush();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }else {
+                new File("/data/data/com.example.rmesaage/files").mkdir();
+                file.createNewFile();
+                FileWriter fr = new FileWriter(file);
+                BufferedWriter br = new BufferedWriter(fr);
+                select.forEach(x -> {
+                    try {
+                        br.write(x.toString() + "\n");
+                        System.out.println(x);
+                        br.flush();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                });
+            }
         } catch (IOException ignored) {
             ignored.printStackTrace();
         }

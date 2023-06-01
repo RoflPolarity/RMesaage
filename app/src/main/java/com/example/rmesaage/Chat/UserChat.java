@@ -44,6 +44,7 @@ public class UserChat extends AppCompatActivity {
 
     public void OnNewMessageRec(Message message){
         chatAdapter.insert(message);
+        System.out.println(message.getBitMaps()+ " - maps");
         runOnUiThread(new Runnable() {
             @Override
             public void run() {

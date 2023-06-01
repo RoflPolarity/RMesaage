@@ -179,6 +179,8 @@ public class databaseUtils{
             database.setTransactionSuccessful();
             database.endTransaction();
             database.close();
+            Userchat.OnNewMessageRec(message);
+
         }
 
     }

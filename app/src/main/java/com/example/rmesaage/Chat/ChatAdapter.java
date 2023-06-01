@@ -82,6 +82,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
         }
 
         public void bind(Message message, int position) {
+            System.out.println(message.getBitMaps());
             if (message.getBitMaps() != null) {
                 textViewMessage.setVisibility(View.GONE);
                 recyclerView.setVisibility(View.VISIBLE);
@@ -90,6 +91,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                 for (int i = 0; i < message.getBitMaps().size(); i++) {
                     medias.add(BitmapFactory.decodeByteArray(message.getBitMaps().get(i), 0, message.getBitMaps().get(i).length));
                 }
+                System.out.println(medias.size());
                 if (message.getBitMaps().size() == 1) {
                     GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 1);
                     recyclerView.setLayoutManager(layoutManager);
@@ -116,6 +118,7 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
                     recyclerView.setAdapter(mediaAdapter);
                 }
             } else {
+                System.out.println("Вставлено как текст");
                 textViewMessage.setVisibility(View.VISIBLE);
                 textViewMessage.setText(message.getText());
                 if (message.getMessageUser().equals(currentUser)) {
