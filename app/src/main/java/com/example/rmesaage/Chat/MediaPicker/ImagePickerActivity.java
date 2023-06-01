@@ -99,6 +99,21 @@ public class ImagePickerActivity extends AppCompatActivity {
             ActivityCompat.requestPermissions(this,
                     new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
                     REQUEST_CODE_WRITE_EXTERNAL_STORAGE);
+            System.out.println("Разрешение получено");
+        }else {
+            File file = new File("/data/data/com.example.rmesaage/files/Temp.txt");
+            try {
+                file.createNewFile();
+                System.out.println("Создано");
+            } catch (IOException e) {
+                File file1 = new File("/data/data/com.example.rmesaage/files");
+                file1.mkdir();
+                try {
+                    file.createNewFile();
+                } catch (IOException ex) {
+                    throw new RuntimeException(ex);
+                }
+            }
         }
 
 
@@ -167,7 +182,6 @@ public class ImagePickerActivity extends AppCompatActivity {
     public Path createTempImageFile(Set<Uri> select){
         File file = new File("/data/data/com.example.rmesaage/files/Temp.txt");
         try {
-            file.createNewFile();
             FileWriter fr = new FileWriter(file);
             BufferedWriter br = new BufferedWriter(fr);
             select.forEach(x->{
