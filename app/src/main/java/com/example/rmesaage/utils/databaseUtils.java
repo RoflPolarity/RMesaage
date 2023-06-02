@@ -2,6 +2,7 @@ package com.example.rmesaage.utils;
 
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -9,6 +10,8 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+
+import androidx.core.content.ContextCompat;
 
 import com.example.rmesaage.Chat.Message;
 import com.example.rmesaage.Chat.UserChat;
@@ -102,10 +105,11 @@ public class databaseUtils{
                             ArrayList<String> paths = new ArrayList<>();
                             String[] splittedText = text.split("   ");
                             for (int i = 0; i < splittedText.length; i++) {
-                                Uri imageUri = Uri.parse(splittedText[i]);
-                                paths.add(String.valueOf(imageUri));
-
+                                String[] split = splittedText[i].split("filename");
+                                split[1] = split[1].replace(" = ","");
                                 try {
+                                    Uri imageUri = Uri.parse(split[0].replace("{",""));
+                                    paths.add(String.valueOf(imageUri)+"{filename = " + split[1]);
                                     InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
                                     byte[] fileBytes = getBytesFromInputStream(inputStream);
                                     bitMaps.add(fileBytes);

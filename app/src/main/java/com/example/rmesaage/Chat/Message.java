@@ -8,6 +8,7 @@ public class Message implements Serializable {
     private ArrayList<byte[]> bitMaps;
     private ArrayList<String> paths;
     private String sendTo;
+
     public Message(String messageUser,String text, int id){
         this.messageUser = messageUser;
         this.text = text;

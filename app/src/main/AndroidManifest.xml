@@ -42,7 +42,10 @@
                 android:value="" />
         </activity>
 
-        <activity android:name=".Chat.MediaPicker.ImagePickerActivity" />
+        <activity
+            android:name=".Chat.MediaPicker.ImagePickerActivity"
+            android:launchMode="singleTop">
+        </activity>
 
 
         <activity

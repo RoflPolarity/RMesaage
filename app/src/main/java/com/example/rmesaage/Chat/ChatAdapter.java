@@ -17,6 +17,7 @@ import com.example.rmesaage.R;
 import org.w3c.dom.ls.LSOutput;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
@@ -80,63 +81,81 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             textViewMessage = itemView.findViewById(R.id.text_view_message);
             recyclerView = itemView.findViewById(R.id.rv_media_list);
         }
-
+        //TODO РАЗОБРАТЬСЯ!!!!!
         public void bind(Message message, int position) {
             System.out.println(message.getBitMaps());
+            //Вставка того, что имеет битмапы
             if (message.getBitMaps() != null) {
-                textViewMessage.setVisibility(View.GONE);
-                recyclerView.setVisibility(View.VISIBLE);
-                List<Bitmap> medias = new ArrayList<>();
-                int[] scale;
-                for (int i = 0; i < message.getBitMaps().size(); i++) {
-                    medias.add(BitmapFactory.decodeByteArray(message.getBitMaps().get(i), 0, message.getBitMaps().get(i).length));
-                }
-                System.out.println(medias.size());
-                if (message.getBitMaps().size() == 1) {
-                    GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 1);
-                    recyclerView.setLayoutManager(layoutManager);
-                    scale = new int[]{900, 700};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
-                    recyclerView.setAdapter(mediaAdapter);
-                } else if (message.getBitMaps().size() >= 2 && message.getBitMaps().size() < 4) {
-                    GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 2);
-                    recyclerView.setLayoutManager(layoutManager);
-                    scale = new int[]{800, 700};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
-                    recyclerView.setAdapter(mediaAdapter);
-                } else if (message.getBitMaps().size() >= 4 && message.getBitMaps().size() < 6) {
-                    GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 3);
-                    recyclerView.setLayoutManager(layoutManager);
-                    scale = new int[]{700, 600};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
-                    recyclerView.setAdapter(mediaAdapter);
+
+                //Вставка документов
+                if (message.getPaths().size() == 1) {
+                    String[] arr = message.getPaths().get(0).replace("Image---", "").split("=");
+                    String filename = arr[1];
+                    if (!filename.split("\\.")[1].equals("jpg")) {
+                        textViewMessage.setVisibility(View.VISIBLE);
+                        recyclerView.setVisibility(View.GONE);
+                        textViewMessage.setText(filename);
+                        if (message.getMessageUser().equals(currentUser)) {
+                            textViewMessage.setBackgroundResource(R.drawable.message_bubble_user);
+                            textViewMessage.setGravity(Gravity.END);
+                        } else {
+                            textViewMessage.setBackgroundResource(R.drawable.message_bubble_other);
+                            textViewMessage.setGravity(Gravity.START);
+                        }
+
+                        }
+                    //Вставка изображений
+                    } else {
+                        textViewMessage.setVisibility(View.GONE);
+                        recyclerView.setVisibility(View.VISIBLE);
+                        List<Bitmap> medias = new ArrayList<>();
+                        int[] scale;
+                        for (int i = 0; i < message.getBitMaps().size(); i++) {
+                            medias.add(BitmapFactory.decodeByteArray(message.getBitMaps().get(i), 0, message.getBitMaps().get(i).length));
+                        }
+                        if (message.getBitMaps().size() == 1) {
+                            GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 1);
+                            recyclerView.setLayoutManager(layoutManager);
+                            scale = new int[]{900, 700};
+                            MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
+                            recyclerView.setAdapter(mediaAdapter);
+                        } else if (message.getBitMaps().size() >= 2 && message.getBitMaps().size() < 4) {
+                            GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 2);
+                            recyclerView.setLayoutManager(layoutManager);
+                            scale = new int[]{800, 700};
+                            MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
+                            recyclerView.setAdapter(mediaAdapter);
+                        } else if (message.getBitMaps().size() >= 4 && message.getBitMaps().size() < 6) {
+                            GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 3);
+                            recyclerView.setLayoutManager(layoutManager);
+                            scale = new int[]{700, 600};
+                            MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
+                            recyclerView.setAdapter(mediaAdapter);
+                        } else {
+                            GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 4);
+                            recyclerView.setLayoutManager(layoutManager);
+                            scale = new int[]{600, 500};
+                            MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
+                            recyclerView.setAdapter(mediaAdapter);
+                        }
+                    }
                 } else {
-                    GridLayoutManager layoutManager = new GridLayoutManager(recyclerView.getContext(), 4);
-                    recyclerView.setLayoutManager(layoutManager);
-                    scale = new int[]{600, 500};
-                    MediaAdapter mediaAdapter = new MediaAdapter(medias, scale);
-                    recyclerView.setAdapter(mediaAdapter);
-                }
-            } else {
-                System.out.println("Вставлено как текст");
-                textViewMessage.setVisibility(View.VISIBLE);
-                textViewMessage.setText(message.getText());
-                if (message.getMessageUser().equals(currentUser)) {
-                    // Сообщение пользователя
-                    textViewMessage.setBackgroundResource(R.drawable.message_bubble_user);
-                    textViewMessage.setGravity(Gravity.END);
-                } else {
-                    // Сообщение собеседника
-                    textViewMessage.setBackgroundResource(R.drawable.message_bubble_other);
-                    textViewMessage.setGravity(Gravity.START);
+                    textViewMessage.setVisibility(View.VISIBLE);
+                    textViewMessage.setText(message.getText());
+                    if (message.getMessageUser().equals(currentUser)) {
+                        // Сообщение пользователя
+                        textViewMessage.setBackgroundResource(R.drawable.message_bubble_user);
+                        textViewMessage.setGravity(Gravity.END);
+                    } else {
+                        // Сообщение собеседника
+                        textViewMessage.setBackgroundResource(R.drawable.message_bubble_other);
+                        textViewMessage.setGravity(Gravity.START);
+                    }
                 }
             }
         }
+        public boolean insert(Message message) {
+            messageList.add(message);
+            return true;
     }
-
-    public boolean insert(Message message) {
-        messageList.add(message);
-        return true;
-    }
-
 }

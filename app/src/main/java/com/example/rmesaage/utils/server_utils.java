@@ -16,6 +16,7 @@ import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class server_utils {
@@ -87,14 +88,10 @@ public class server_utils {
             public void run() {
                 try {
                     while (true) {
-                        // Проверяем флаг isSyncing для определения, нужно ли читать объекты
                         if (OIS != null) {
-                            System.out.println(true);
                             Object object = OIS.readObject();
                             if (object instanceof Response) {
                                 Response<?> response = (Response<?>) object;
-                                System.out.println(response.getComma());
-                                System.out.println();
                                 if ("NewMessage".equals(response.getComma())) {
                                     String message = "";
                                     if (response.getData() instanceof String){
@@ -107,8 +104,8 @@ public class server_utils {
 
                                         for (int i = 0; i < images.size(); i++) {
                                             byte[] imageBytes = images.get(i);
-                                            String filePath = "/data/data/com.example.rmesaage/files/image" + images.hashCode() + ".jpg";
-                                            paths.add(filePath);
+                                            String filePath = "/data/data/com.example.rmesaage/files/" + Arrays.hashCode(imageBytes) + ".jpg";
+                                            paths.add(filePath + "{filename = " + Arrays.hashCode(imageBytes) + ".jpg");
                                             try {
                                                 File file = new File(filePath);
                                                 FileOutputStream fos = new FileOutputStream(file);

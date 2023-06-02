@@ -121,42 +121,50 @@ public class UserChat extends AppCompatActivity {
                             Intent data = result.getData();
                             if (data != null) {
                                 // Получите выбранные изображения из интента и обработайте их
-                                    String path = data.getStringExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES);
-                                try {
-                                    BufferedReader br = new BufferedReader(new FileReader(new File(path)));
-                                    ArrayList<byte[]> res = new ArrayList<>();
-                                    ArrayList<String> paths = new ArrayList<>();
-                                    String line = "";
-                                    while ((line = br.readLine())!=null){
-                                        Uri imageUri = Uri.parse(line);
-                                        paths.add(line);
-                                        InputStream inputStream = getContentResolver().openInputStream(imageUri);
-                                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                                        byte[] buffer = new byte[1024];
-                                        int bytesRead;
+                                String imagePath = data.getStringExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES);
+                                String docPath = data.getStringExtra(ImagePickerActivity.EXTRA_SELECTED_DOCS);
+                                String path = imagePath != null ? imagePath : docPath;
 
-                                        while ((bytesRead = inputStream.read(buffer)) != -1) {
-                                            byteArrayOutputStream.write(buffer, 0, bytesRead);
+                                if (path != null && !path.isEmpty()) {
+                                    try {
+                                        BufferedReader br = new BufferedReader(new FileReader(new File(path)));
+                                        ArrayList<byte[]> res = new ArrayList<>();
+                                        ArrayList<String> paths = new ArrayList<>();
+                                        String line;
+                                        while ((line = br.readLine()) != null) {
+                                            Uri imageUri = Uri.parse(line);
+                                            String filename = getFileNameFromUri(imageUri);
+                                            paths.add(line + "{filename = " + filename);
+                                            InputStream inputStream = getContentResolver().openInputStream(imageUri);
+                                            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                                            byte[] buffer = new byte[1024];
+                                            int bytesRead;
+
+                                            while ((bytesRead = inputStream.read(buffer)) != -1) {
+                                                byteArrayOutputStream.write(buffer, 0, bytesRead);
+                                            }
+                                            inputStream.close();
+                                            res.add(byteArrayOutputStream.toByteArray());
                                         }
-                                        inputStream.close();
-                                        res.add(byteArrayOutputStream.toByteArray());
+
+                                        Thread thread = new Thread(new Runnable() {
+                                            @Override
+                                            public void run() {
+                                                server_utils.sendMessage(new Message(0, username, null, res, sendTo, paths), getApplicationContext());
+                                            }
+                                        });
+                                        thread.start();
+                                        thread.join();
+
+                                    } catch (IOException | InterruptedException e) {
+                                        throw new RuntimeException(e);
                                     }
-                                    Thread thread = new Thread(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            server_utils.sendMessage(new Message(0,username,null,res,sendTo, paths),getApplicationContext());
-                                        }
-                                    });
-                                    thread.start();
-                                    chatAdapter.insert(new Message(0,username,null,res,sendTo,paths));
-                                    chatAdapter.notifyItemInserted(chatAdapter.getItemCount());
-                                } catch (IOException e) {
-                                    throw new RuntimeException(e);
                                 }
                             }
                         }
                     }
                 });
+
 
 
         ImageButton attach = findViewById(R.id.attach);
@@ -168,5 +176,24 @@ public class UserChat extends AppCompatActivity {
             }
         });
 
+    }
+    public String getFileNameFromUri(Uri uri) {
+        String fileName = null;
+        if (uri != null) {
+            Cursor cursor = null;
+            try {
+                String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
+                cursor = getContentResolver().query(uri, projection, null, null, null);
+                if (cursor != null && cursor.moveToFirst()) {
+                    int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
+                    fileName = cursor.getString(columnIndex);
+                }
+            } finally {
+                if (cursor != null) {
+                    cursor.close();
+                }
+            }
+        }
+        return fileName;
     }
 }
