@@ -99,7 +99,7 @@ public class databaseUtils{
                         String recipient = cursor.getString(columnIndexSendTo);
                         String text = cursor.getString(columnIndexText);
                         if (text!=null){
-                        if (text.contains("Image---")){
+                        if (text.contains("Image---")&&!text.contains("document")){
                             text = text.replace("Image---","");
                             ArrayList<byte[]> bitMaps = new ArrayList<>();
                             ArrayList<String> paths = new ArrayList<>();
@@ -118,7 +118,12 @@ public class databaseUtils{
                                 }
                             }
                             msList.add(new Message(id, sender, null, bitMaps, recipient,paths));
-                            }else msList.add(new Message(id, sender, text, null, recipient,null));
+                            } else if (text.contains("document")) {
+                                text = text.replace("Image---","");
+                                ArrayList<String> path = new ArrayList<>();
+                                path.add(text.split("filename")[0].replace("{",""));
+                                msList.add(new Message(id,sender,text.split("=")[1],null,recipient,path));
+                        } else msList.add(new Message(id, sender, text, null, recipient,null));
                         }
                     } catch (SQLiteException e) {
                         e.printStackTrace();

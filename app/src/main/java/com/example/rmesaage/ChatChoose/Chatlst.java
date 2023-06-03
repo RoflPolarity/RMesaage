@@ -1,12 +1,16 @@
 package com.example.rmesaage.ChatChoose;
 
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ImageButton;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.Chat.Message;
@@ -26,12 +30,16 @@ public class Chatlst extends AppCompatActivity {
     private boolean update = true;
     Timer timer = new Timer();
 
+    private static final int REQUEST_READ_EXTERNAL_STORAGE = 1;
+
     String username;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
+
+
         Intent intent = getIntent();
         server_utils.getNewMessageThread(getApplicationContext());
         username = intent.getStringExtra("author");

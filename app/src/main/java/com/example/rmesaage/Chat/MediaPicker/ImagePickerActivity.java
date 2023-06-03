@@ -38,8 +38,6 @@ public class ImagePickerActivity extends AppCompatActivity {
     private static final int REQUEST_READ_EXTERNAL_STORAGE = 1;
     private static final int REQUEST_CODE_WRITE_EXTERNAL_STORAGE = 1;
     public static final String EXTRA_SELECTED_IMAGES = "selected_images";
-    public static final String EXTRA_SELECTED_DOCS = "selected_docs";
-
     private HashSet<Uri> selected = new HashSet<>();
     private ImageAdapter imageAdapter;
 
@@ -72,39 +70,6 @@ public class ImagePickerActivity extends AppCompatActivity {
 
         imageAdapter = new ImageAdapter(new ArrayList<>(), this);
         gridView.setAdapter(imageAdapter);
-
-        ConstraintLayout imageViewImages = findViewById(R.id.roundButtonImage);
-        imageViewImages.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                gridView.setAdapter(imageAdapter);
-            }
-        });
-
-        ConstraintLayout imageViewDocs = findViewById(R.id.roundButtonDoc);
-        ActivityResultLauncher<String> documentLauncher = registerForActivityResult(
-                new ActivityResultContracts.GetContent(),
-                new ActivityResultCallback<Uri>() {
-                    @Override
-                    public void onActivityResult(Uri result) {
-                        if (result != null) {
-                            selected.clear();
-                            selected.add(result);
-                            Path tempFilePath = createTempImageFile(selected);
-                            Intent resultIntent = new Intent();
-                            resultIntent.putExtra(EXTRA_SELECTED_DOCS, tempFilePath.toString());
-                            setResult(RESULT_OK, resultIntent);
-                            finish();
-                        }
-                    }
-                });
-
-        imageViewDocs.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                documentLauncher.launch("*/*");
-            }
-        });
 
         // Проверка разрешения на чтение внешнего хранилища
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {

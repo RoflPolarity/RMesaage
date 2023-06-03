@@ -66,7 +66,7 @@ public class UserChat extends AppCompatActivity {
 
 
 
-        chatAdapter = new ChatAdapter(messages,username);
+        chatAdapter = new ChatAdapter(messages,username,getApplicationContext());
         RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
         recyclerView.setAdapter(chatAdapter);
         databaseUtils.setChat(this);
@@ -121,9 +121,7 @@ public class UserChat extends AppCompatActivity {
                             Intent data = result.getData();
                             if (data != null) {
                                 // Получите выбранные изображения из интента и обработайте их
-                                String imagePath = data.getStringExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES);
-                                String docPath = data.getStringExtra(ImagePickerActivity.EXTRA_SELECTED_DOCS);
-                                String path = imagePath != null ? imagePath : docPath;
+                                String path = data.getStringExtra(ImagePickerActivity.EXTRA_SELECTED_IMAGES);
 
                                 if (path != null && !path.isEmpty()) {
                                     try {
