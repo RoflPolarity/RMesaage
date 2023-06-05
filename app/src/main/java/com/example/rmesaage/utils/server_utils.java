@@ -19,7 +19,8 @@ import java.util.ArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class server_utils {
-    private static final String SERVER_IP = "80.254.123.76";
+    private static String SERVER_IP = "80.254.123.76";
+    private static int PORT = 2511;
     private static ObjectOutputStream out;
     private static ObjectInputStream OIS;
     private static Socket socket;
@@ -31,13 +32,25 @@ public class server_utils {
             @Override
             public void run() {
                 try {
-                    Socket socket = new Socket(SERVER_IP, 2511);
+                    Socket socket = new Socket(SERVER_IP, PORT);
                     InputStream inputStream = socket.getInputStream();
                     OIS = new ObjectInputStream(inputStream);
+                    Response<?> isConnect = (Response<?>) OIS.readObject();
+                    System.out.println(isConnect.getComma());
+                    System.out.println(isConnect.getData());
+                    if (isConnect.getComma().equals("Redirect")){
+                        System.out.println(isConnect.getComma());
+                        socket.close();
+                        String[] servData = ((String)isConnect.getData()).split(":");
+                        socket = new Socket(servData[0], Integer.parseInt(servData[1]));
+                        OIS = new ObjectInputStream(socket.getInputStream());
+                        OIS.readObject();
+                    }
                     OutputStream outputStream = socket.getOutputStream();
                     out = new ObjectOutputStream(outputStream);
                     server_utils.socket = socket;
-                } catch (IOException e) {
+                    System.out.println(socket);
+                } catch (IOException | ClassNotFoundException e) {
                     throw new RuntimeException(e);
                 }
             }
@@ -56,6 +69,7 @@ public class server_utils {
             out.writeObject(response);
             out.flush();
             response = (Response<?>) OIS.readObject();
+            System.out.println(response.getData());
             res.set((Boolean) response.getData());
         } catch (IOException | ClassNotFoundException e) {
             res.set(false);

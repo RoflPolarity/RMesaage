@@ -55,10 +55,6 @@ public class Auth extends AppCompatActivity {
                             Intent intent = new Intent(Auth.this, Chatlst.class);
                             intent.putExtra("author",username.getText().toString());
                             startActivity(intent);
-                        }else {
-                            Toast toast = Toast.makeText(getApplicationContext(), "Failed to establish a connection with the server", Toast.LENGTH_SHORT);
-                            toast.setGravity(Gravity.CENTER, 0, 0);
-                            toast.show();
                         }
                     }
                 });
