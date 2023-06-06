@@ -131,8 +131,7 @@ public class UserChat extends AppCompatActivity {
                                         String line;
                                         while ((line = br.readLine()) != null) {
                                             Uri imageUri = Uri.parse(line);
-                                            String filename = getFileNameFromUri(imageUri);
-                                            paths.add(line + "{filename = " + filename);
+                                            paths.add(String.valueOf(imageUri));
                                             InputStream inputStream = getContentResolver().openInputStream(imageUri);
                                             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                                             byte[] buffer = new byte[1024];

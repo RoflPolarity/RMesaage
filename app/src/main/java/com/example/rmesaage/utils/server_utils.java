@@ -1,6 +1,7 @@
 package com.example.rmesaage.utils;
 
 import android.content.Context;
+import android.net.Uri;
 import android.os.AsyncTask;
 
 import com.example.rmesaage.Chat.Message;
@@ -117,14 +118,14 @@ public class server_utils {
                                     } else if (response.getData() instanceof ArrayList) {
                                         ArrayList<byte[]> images = (ArrayList<byte[]>) response.getData();
                                         ArrayList<String> paths = new ArrayList<>();
-                                        new File("/data/data/com.example.rmesaage/files").mkdir();
+                                        new File("data/data/com.example.rmesaage/files").mkdir();
 
                                         for (int i = 0; i < images.size(); i++) {
                                             byte[] imageBytes = images.get(i);
-                                            String filePath = "/data/data/com.example.rmesaage/files/image" + i + ".jpg";
-                                            paths.add(filePath);
+                                            String filePath = "data/data/com.example.rmesaage/files/image" + i + ".jpg";
                                             try {
                                                 File file = new File(filePath);
+                                                paths.add(String.valueOf(Uri.fromFile(file)));
                                                 FileOutputStream fos = new FileOutputStream(file);
                                                 fos.write(imageBytes);
                                                 fos.close();

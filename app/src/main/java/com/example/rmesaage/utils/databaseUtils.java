@@ -99,17 +99,16 @@ public class databaseUtils{
                         String recipient = cursor.getString(columnIndexSendTo);
                         String text = cursor.getString(columnIndexText);
                         if (text!=null){
-                        if (text.contains("Image---")&&!text.contains("document")){
+                        if (text.contains("Image---")){
                             text = text.replace("Image---","");
                             ArrayList<byte[]> bitMaps = new ArrayList<>();
                             ArrayList<String> paths = new ArrayList<>();
                             String[] splittedText = text.split("   ");
                             for (int i = 0; i < splittedText.length; i++) {
-                                String[] split = splittedText[i].split("filename");
-                                split[1] = split[1].replace(" = ","");
+                                Uri imageUri = Uri.parse(splittedText[i]);
+                                paths.add(String.valueOf(imageUri));
+
                                 try {
-                                    Uri imageUri = Uri.parse(split[0].replace("{",""));
-                                    paths.add(String.valueOf(imageUri)+"{filename = " + split[1]);
                                     InputStream inputStream = context.getContentResolver().openInputStream(imageUri);
                                     byte[] fileBytes = getBytesFromInputStream(inputStream);
                                     bitMaps.add(fileBytes);
@@ -118,11 +117,6 @@ public class databaseUtils{
                                 }
                             }
                             msList.add(new Message(id, sender, null, bitMaps, recipient,paths));
-                            } else if (text.contains("document")) {
-                                text = text.replace("Image---","");
-                                ArrayList<String> path = new ArrayList<>();
-                                path.add(text.split("filename")[0].replace("{",""));
-                                msList.add(new Message(id,sender,text.split("=")[1],null,recipient,path));
                         } else msList.add(new Message(id, sender, text, null, recipient,null));
                         }
                     } catch (SQLiteException e) {
