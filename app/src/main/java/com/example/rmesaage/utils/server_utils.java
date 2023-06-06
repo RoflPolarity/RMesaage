@@ -51,7 +51,7 @@ public class server_utils {
                     server_utils.socket = socket;
                     System.out.println(socket);
                 } catch (IOException | ClassNotFoundException e) {
-                    throw new RuntimeException(e);
+                    e.printStackTrace();
                 }
             }
         });
