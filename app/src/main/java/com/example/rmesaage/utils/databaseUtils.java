@@ -35,7 +35,6 @@ public class databaseUtils{
     public static void setChat(UserChat chat){
         Userchat = chat;
     }
-
     public static void createTableIfNotExists(Context context) {
         SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
         database.beginTransaction();
@@ -46,22 +45,21 @@ public class databaseUtils{
         database.endTransaction();
         database.close();
     }
-
-
     public static ArrayList<ChatLstItem> getChats(String author, Context context) {
         ArrayList<ChatLstItem> chats = new ArrayList<>();
             Set<String> sendTo = new HashSet<>();
-            String selection = "author=?";
-            String[] selectionArgs = new String[]{author};
             SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
             database.beginTransaction();
-            Cursor cursor = database.query(TABLE_NAME, null, selection, selectionArgs, null, null, null);
+            Cursor cursor = database.query(TABLE_NAME, null, null,null, null, null, null);
 
             int columnIndexSendTo = cursor.getColumnIndex("sendTo");
+            int columnIndexAuthor = cursor.getColumnIndex("author");
             while (cursor.moveToNext()) {
                 String sendToValue = cursor.getString(columnIndexSendTo);
+                String authorCurse = cursor.getString(columnIndexAuthor);
                 if (sendToValue != null) {
                     sendTo.add(sendToValue);
+                    sendTo.add(authorCurse);
                 }
             }
             cursor.close();
@@ -78,7 +76,6 @@ public class databaseUtils{
 
             return chats;
     }
-
     public static ArrayList<Message> getMsList(String author, String sendTo,Context context) {
         SQLiteDatabase database = context.openOrCreateDatabase("message.db", Context.MODE_PRIVATE, null);
         ArrayList<Message> msList = new ArrayList<>();
@@ -129,7 +126,6 @@ public class databaseUtils{
         database.close();
         return msList;
     }
-
     private static byte[] getBytesFromInputStream(InputStream inputStream) throws IOException {
         ByteArrayOutputStream byteBuffer = new ByteArrayOutputStream();
         int bufferSize = 1024;

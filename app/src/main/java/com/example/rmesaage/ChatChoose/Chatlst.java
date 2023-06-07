@@ -38,16 +38,40 @@ public class Chatlst extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat);
-
-
         Intent intent = getIntent();
         server_utils.getNewMessageThread(getApplicationContext());
         username = intent.getStringExtra("author");
         chatAdapter = new ChatAdapter(new ArrayList<>());
+
         RecyclerView view = findViewById(R.id.recyclerview_chats);
         view.setAdapter(chatAdapter);
         SearchView searchView = findViewById(R.id.search_view);
-        synch();
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                ArrayList<Message> res = server_utils.sync(username);
+                System.out.println(res.size());
+                if (res!=null && res.size()>0){
+                    ArrayList<ChatLstItem> senders = databaseUtils.getChats(username,getApplicationContext());
+                    ArrayList<Message> inserted = new ArrayList<>();
+                    for (int i = 0; i < senders.size(); i++) {
+                        ArrayList<Message> localMessages = databaseUtils.getMsList(username,senders.get(i).getName(),getApplicationContext());
+                        for (int j = 0; j < localMessages.size(); j++) {
+                            if (!res.get(i).equals(localMessages.get(j))){
+                                databaseUtils.insert(res.get(i),getApplicationContext());
+                                inserted.add(res.get(i));
+                            }
+                        }
+                    }
+                    res.removeAll(inserted);
+                    for (int i = 0; i < res.size(); i++) {
+                        databaseUtils.insert(res.get(i),getApplicationContext());
+                    }
+                }
+                System.out.println("Синхронизированно");
+            }
+        });
+        thread.start();
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -104,7 +128,7 @@ public class Chatlst extends AppCompatActivity {
                     }
                 });
             }
-        },0,1500);
+        },0,500);
     }
 
 
@@ -112,34 +136,5 @@ public class Chatlst extends AppCompatActivity {
     protected void onStop() {
         super.onStop();
         timer.cancel();
-    }
-
-
-
-    public void synch(){
-        ImageButton btnSynch = findViewById(R.id.sychronize);
-        btnSynch.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Thread thread = new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        ArrayList<Message> res = server_utils.sync(username);
-                        if (res != null){
-                        for (int i = 0; i < res.size(); i++) {
-                            databaseUtils.insert(res.get(i),getApplicationContext());
-
-                            }
-                        }
-                    }
-                });
-                thread.start();
-                try {
-                    thread.join();
-                } catch (InterruptedException e) {
-                    throw new RuntimeException(e);
-                }
-            }
-        });
     }
 }

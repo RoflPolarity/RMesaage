@@ -27,7 +27,7 @@ public class server_utils {
     private static Socket socket;
     static Thread thread;
     static ArrayList<Message> synced = new ArrayList<>();
-    static int searched = -1;
+    static int searched = -1, sy = -1;
     public static void initializeStreams() {
         Thread th = new Thread(new Runnable() {
             @Override
@@ -140,6 +140,7 @@ public class server_utils {
 
                                 }else if ("Sync".equals(response.getComma())) {
                                     synced = (ArrayList<Message>) response.getData();
+                                    sy = 1;
                                 }else if ("Search".equals(response.getComma())){
                                     if ((Boolean) response.getData()){
                                         searched = 1;
@@ -190,10 +191,7 @@ public class server_utils {
             Response<?> response = new Response<>("Sync", username, null, null, null, "user");
             out.writeObject(response);
             out.flush();
-
-            while (synced.size()==0){
-
-            }
+            while (sy==-1){}
             return synced;
         } catch (Exception e) {
             e.printStackTrace();
@@ -201,4 +199,5 @@ public class server_utils {
         thread.start();
         return null;
     }
+
 }
