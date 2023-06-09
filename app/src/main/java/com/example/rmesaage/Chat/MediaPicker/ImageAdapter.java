@@ -13,7 +13,6 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.rmesaage.Chat.MediaPicker.ImageItem;
 import com.example.rmesaage.R;
 import com.squareup.picasso.Picasso;
 

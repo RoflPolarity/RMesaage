@@ -1,16 +1,12 @@
 package com.example.rmesaage.ChatChoose;
 
-import android.Manifest;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.view.View;
-import android.widget.ImageButton;
+import android.widget.ImageView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
+import androidx.appcompat.widget.Toolbar;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.Chat.Message;
@@ -18,6 +14,8 @@ import com.example.rmesaage.Chat.UserChat;
 import com.example.rmesaage.R;
 import com.example.rmesaage.utils.databaseUtils;
 import com.example.rmesaage.utils.server_utils;
+import com.squareup.picasso.Callback;
+import com.squareup.picasso.Picasso;
 
 import java.util.ArrayList;
 import java.util.Timer;
@@ -29,11 +27,7 @@ public class Chatlst extends AppCompatActivity {
     private ChatAdapter chatAdapter;
     private boolean update = true;
     Timer timer = new Timer();
-
-    private static final int REQUEST_READ_EXTERNAL_STORAGE = 1;
-
     String username;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -50,7 +44,6 @@ public class Chatlst extends AppCompatActivity {
             @Override
             public void run() {
                 ArrayList<Message> res = server_utils.sync(username);
-                System.out.println(res.size());
                 if (res!=null && res.size()>0){
                     ArrayList<ChatLstItem> senders = databaseUtils.getChats(username,getApplicationContext());
                     ArrayList<Message> inserted = new ArrayList<>();
@@ -72,6 +65,22 @@ public class Chatlst extends AppCompatActivity {
             }
         });
         thread.start();
+        Toolbar tools = findViewById(R.id.toolbar_chats);
+        ImageView gif = tools.findViewById(R.id.gif);
+        Picasso.get().load("https://media.tenor.com/D4b9-Caw8CEAAAAC/alphabet-run.gif").resize(48, 48).into(gif, new Callback() {
+            @Override
+            public void onSuccess() {
+                // Код, который выполнится при успешной загрузке и отображении GIF
+                System.out.println("Загружено");
+            }
+
+            @Override
+            public void onError(Exception e) {
+                // Код, который выполнится в случае ошибки загрузки или отображения GIF
+                e.printStackTrace();
+            }
+        });
+
 
         searchView.setOnQueryTextListener(new SearchView.OnQueryTextListener() {
             @Override
@@ -128,10 +137,8 @@ public class Chatlst extends AppCompatActivity {
                     }
                 });
             }
-        },0,500);
+        },0,1500);
     }
-
-
     @Override
     protected void onStop() {
         super.onStop();

@@ -20,11 +20,8 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.rmesaage.R;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder> {
@@ -141,7 +138,6 @@ public class ChatAdapter extends RecyclerView.Adapter<ChatAdapter.ChatViewHolder
             textViewMessage = itemView.findViewById(R.id.text_view_message);
             recyclerView = itemView.findViewById(R.id.rv_media_list);
         }
-        //TODO РАЗОБРАТЬСЯ!!!!!
         public void bind(Message message, int position) {
             System.out.println(message.getBitMaps());
             //Вставка того, что имеет битмапы

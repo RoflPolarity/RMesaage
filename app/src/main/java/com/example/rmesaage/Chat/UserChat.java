@@ -1,14 +1,18 @@
 package com.example.rmesaage.Chat;
 
+import android.annotation.SuppressLint;
+import android.content.Context;
 import android.content.Intent;
-import android.database.Cursor;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.Toast;
+import android.widget.Toolbar;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
@@ -25,20 +29,14 @@ import com.example.rmesaage.utils.server_utils;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 
 
 public class UserChat extends AppCompatActivity {
-    private static final int REQUEST_EXTERNAL_STORAGE = 1;
     ChatAdapter chatAdapter;
-    private static final int REQUEST_IMAGE_PICKER = 1;
     private ActivityResultLauncher<Intent> imagePickerLauncher;
 
 
@@ -64,8 +62,22 @@ public class UserChat extends AppCompatActivity {
         TextView name = findViewById(R.id.ChatName);
         name.setText(sendTo);
 
+        Switch sw = findViewById(R.id.toolbar_chats).findViewById(R.id.switch1);
 
+        SharedPreferences sharedPreferences = getApplicationContext().getSharedPreferences("ChatSettings", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        sw.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                editor.putBoolean("switch_state", sw.isChecked());
+                editor.apply();
 
+            }
+        });
+
+        boolean switchState = sharedPreferences.getBoolean("switch_state", false);
+        sw.setChecked(switchState);
+        Toast.makeText(getApplicationContext(),String.valueOf(switchState), Toast.LENGTH_SHORT).show();
         chatAdapter = new ChatAdapter(messages,username,getApplicationContext());
         RecyclerView recyclerView = findViewById(R.id.recyclerview_chats);
         recyclerView.setAdapter(chatAdapter);
@@ -173,24 +185,5 @@ public class UserChat extends AppCompatActivity {
             }
         });
 
-    }
-    public String getFileNameFromUri(Uri uri) {
-        String fileName = null;
-        if (uri != null) {
-            Cursor cursor = null;
-            try {
-                String[] projection = {MediaStore.MediaColumns.DISPLAY_NAME};
-                cursor = getContentResolver().query(uri, projection, null, null, null);
-                if (cursor != null && cursor.moveToFirst()) {
-                    int columnIndex = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME);
-                    fileName = cursor.getString(columnIndex);
-                }
-            } finally {
-                if (cursor != null) {
-                    cursor.close();
-                }
-            }
-        }
-        return fileName;
     }
 }

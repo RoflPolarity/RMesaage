@@ -2,10 +2,8 @@ package com.example.rmesaage.utils;
 
 import android.content.Context;
 import android.net.Uri;
-import android.os.AsyncTask;
 
 import com.example.rmesaage.Chat.Message;
-import com.example.rmesaage.Chat.UserChat;
 import com.example.rmesaage.Response;
 
 import java.io.File;
@@ -157,7 +155,6 @@ public class server_utils {
         thread.setName("NewMessages");
         thread.start();
     }
-
     public static boolean reg(String username, String password) {
 
         AtomicBoolean res = new AtomicBoolean();
@@ -199,5 +196,4 @@ public class server_utils {
         thread.start();
         return null;
     }
-
 }

@@ -11,10 +11,6 @@ public class ChatLstItem {
         return lastMessage;
     }
 
-    public void setLastMessage(String lastMessage) {
-        this.lastMessage = lastMessage;
-    }
-
     public String getName() {
         return name;
     }
